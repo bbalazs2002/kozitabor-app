@@ -1,0 +1,41 @@
+# --- Dependenciák ---
+node_modules/
+**/node_modules/
+
+# --- Környezeti változók (TITKOS ADATOK) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+
+# --- Build mappák ---
+dist/
+build/
+.next/
+out/
+
+# --- IDE és Operációs rendszer fájlok ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# --- Prisma és Adatbázis ---
+/prisma/migrations/
+# Megjegyzés: a schema.prisma-t érdemes feltölteni, de a lokális SQLite fájlt nem:
+*.db
+*.db-journal
+
+# --- Tesztelés és Cache ---
+.eslintcache
+.npm
+.cache/
+coverage/
+
+# --- docker images ---
+.gz
+*.gz
+**.gz

@@ -1,0 +1,18 @@
+# create new image
+docker build --platform linux/amd64 -t [kozitabor-react:latest (new image name)] [./kozitabor-react (path)]
+docker build --platform linux/amd64 --build-arg VITE_API_BASE_URL="/kozitabor/api" -t kozitabor-react:latest ./kozitabor-react
+
+# export image from docker
+ocker save [kozitabor-react:latest (image name)] | gzip > [react.tar.gz (new file name/path)]
+
+# load image to docker (on server)
+docker load < react.tar.gz
+
+# run docker
+docker compose up -d
+
+# save database
+docker exec kozitabor-postgres pg_dump -U ${DB_USER} ${DB_NAME} > backup_$(date +%F).sql
+
+# run command in container (-i interactive: console stays open)
+docker exec -it <konténer_neve_vagy_id> <parancs>

@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: kozitabor-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - kozitabor_postgres_data:/var/lib/postgresql/data
+
+  backend:
+    container_name: kozitabor-api
+    build: ./kozitabor-api
+    restart: always
+    environment:
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}?schema=public"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      API_PORT: ${API_PORT}
+      CLIENT_URL: ${CLIENT_URL}
+      CLIENT_PORT: ${CLIENT_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+#    ports:
+#      - "5000:5000"
+
+  frontend:
+    container_name: kozitabor-react
+    build:
+      context: ./kozitabor-react
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  kozitabor_postgres_data:
