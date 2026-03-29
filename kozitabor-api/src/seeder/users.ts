@@ -5,8 +5,6 @@ import bcrypt from 'bcrypt';
 async function main() {
     console.log('🚀 Felhasználók újratöltése folyamatban...');
 
-    await prisma.session.deleteMany();
-    await prisma.account.deleteMany();
     await prisma.user.deleteMany();
 
     console.log('✅ Táblák kiürítve (session, account, user).');

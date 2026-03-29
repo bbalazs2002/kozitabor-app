@@ -75,55 +75,57 @@ export const createInfo = async (req: Request, res: Response) => {
   }
 };
 export const updateInfo = async (req: Request, res: Response) => {
-
-    let id:number;
+    let id: number;
     try {
         id = parseId(req.params.id);
     } catch (err) {
-        return res.status(400).json({ error: err });
+        return res.status(400).json({ error: "Érvénytelen ID" });
     }
+
     const { title, icon, content, map } = req.body;
 
     try {
-        // 1. Megkeressük a meglévő rekordot, hogy tudjuk, van-e már hozzá térkép
-        const existingNode = await prisma.info.findUnique({
-            where: { id: id },
+        // 1. Megnézzük, van-e jelenleg térkép
+        const existingInfo = await prisma.info.findUnique({
+            where: { id },
             include: { map: true }
         });
 
-        if (!existingNode) {
-            return res.status(404).json({ error: "Az információ nem található." });
+        if (!existingInfo) {
+            return res.status(404).json({ error: "Nem található." });
         }
 
-        // 2. Frissítés végrehajtása
+        // 2. Térkép kezelése (Törlés vagy Frissítés/Létrehozás)
+        if (existingInfo.map && (!map || !map.show)) {
+            // Ha volt térkép, de a user kikapcsolta: TÖRLÉS
+            await prisma.map.delete({ where: { infoId: id } });
+        }
+
+        // 3. Info frissítése + Térkép upsert (ha show: true)
         const updatedNode = await prisma.info.update({
-            where: { id: id },
+            where: { id },
             data: {
                 title,
                 icon,
                 content,
-                // Relációs logika:
-                map: map?.show 
-                    ? {
-                        // Ha van 'show: true', akkor upsert (ha van frissít, ha nincs készít)
+                ...(map?.show && {
+                    map: {
                         upsert: {
                             create: {
                                 lat: map.lat,
                                 lng: map.lng,
                                 zoom: map.zoom,
-                                title: title // A térkép neve megegyezhet az infó címével
+                                title: title
                             },
                             update: {
                                 lat: map.lat,
                                 lng: map.lng,
-                                zoom: map.zoom
+                                zoom: map.zoom,
+                                title: title
                             }
                         }
                     }
-                    : {
-                        // Ha 'show: false', akkor töröljük a kapcsolódó térképet, ha létezett
-                        delete: existingNode.map ? true : false
-                    }
+                })
             },
             include: { map: true }
         });
@@ -131,8 +133,8 @@ export const updateInfo = async (req: Request, res: Response) => {
         return res.json(updatedNode);
 
     } catch (error) {
-        console.error("Prisma Error:", error);
-        return res.status(500).json({ error: "Sikertelen mentés az adatbázisba." });
+        console.error("Hiba:", error);
+        return res.status(500).json({ error: "Szerver hiba a mentés során." });
     }
 };
 export const removeInfo = async (req: Request, res: Response) => {
@@ -849,8 +851,8 @@ export const GetDashboard = async (_req: Request, res: Response) => {
         totalLeaders: contactCount,
         activeInfoCards: infoCount,
       },
-      activityDistribution: activities.map(a => ({ name: a.title, count: a._count.tasks })),
-      teamWorkload: teams.map(t => ({ teamName: t.name, taskCount: t._count.tasks })),
+      activityDistribution: activities.map((a: any) => ({ name: a.title, count: a._count.tasks })),
+      teamWorkload: teams.map((t: any) => ({ teamName: t.name, taskCount: t._count.tasks })),
       upcomingPrograms: upcoming
     };
 

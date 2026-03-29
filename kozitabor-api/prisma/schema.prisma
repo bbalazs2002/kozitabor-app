@@ -11,7 +11,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// Auth.js tables
+// Auth tables
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -22,26 +22,6 @@ model User {
   sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @ relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// Az Account tábla csak akkor kell, ha később engednél Google/GitHub logint is
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
 }
 
 // 1. Kapcsolattartók (Vezetők)
@@ -83,10 +63,9 @@ model Info {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   title     String
-  icon      String   // Pl: "Settings2" - a fluid mapperhez
-  content   String   @db.Text // HTML tartalom tárolására alkalmas
-  mapId     Int?     @unique // Egy kártyához egy térkép tartozhat (vagy null)
-  map       Map?     @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  icon      String
+  content   String   @db.Text
+  map       Map?     // Itt már nincs @relation, csak a típus
 }
 
 // 5. Térkép koordináták
@@ -97,7 +76,10 @@ model Map {
   lat       Float
   lng       Float
   zoom      Int      @default(15)
-  info      Info?    // Ellentétes irányú kapcsolat
+  
+  // A külső kulcs ide kerül:
+  infoId    Int      @unique
+  info      Info     @relation(fields: [infoId], references: [id], onDelete: Cascade)
 }
 
 // 6. Csapatok

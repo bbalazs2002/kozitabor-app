@@ -177,7 +177,7 @@ export const getLivePrograms = async (_req: Request, res: Response) => {
     };
 
     // 1. Aktuális program keresése
-    const currentProgram = potentialPrograms.find(p => {
+    const currentProgram = potentialPrograms.find((p: any) => {
       const startTs = getProgramStartTs(p);
       const endTs = getProgramEndTs(p);
       return nowTs >= startTs && nowTs <= endTs;
@@ -190,14 +190,14 @@ export const getLivePrograms = async (_req: Request, res: Response) => {
       const currentProgramEndTs = getProgramEndTs(currentProgram);
       // Olyan programok, amelyek a jelenlegi program után kezdődnek
       const futurePrograms = potentialPrograms
-        .filter(p => getProgramStartTs(p) > currentProgramEndTs)
-        .sort((a, b) => getProgramStartTs(a) - getProgramStartTs(b));
+        .filter((p: any) => getProgramStartTs(p) > currentProgramEndTs)
+        .sort((a: any, b: any) => getProgramStartTs(a) - getProgramStartTs(b));
       nextProgram = futurePrograms.length > 0 ? futurePrograms[0] : null;
     } else {
       // Ha nincs aktuális program, akkor a legközelebbi jövőbeli program
       const futurePrograms = potentialPrograms
-        .filter(p => getProgramStartTs(p) > nowTs)
-        .sort((a, b) => getProgramStartTs(a) - getProgramStartTs(b));
+        .filter((p: any) => getProgramStartTs(p) > nowTs)
+        .sort((a: any, b: any) => getProgramStartTs(a) - getProgramStartTs(b));
       nextProgram = futurePrograms.length > 0 ? futurePrograms[0] : null;
     }
 
