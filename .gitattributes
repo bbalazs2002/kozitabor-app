@@ -1,0 +1,3 @@
+# Kényszerítsük az LF sorvéget a shell scriptekre
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
