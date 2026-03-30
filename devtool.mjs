@@ -335,7 +335,8 @@ const uploadFilesToRemote = async ({server, user, port, keyPath, targetDir}) => 
         './build/api.tar.gz',
         './build/react.tar.gz',
         './docker-compose.yml',
-        './nginx.conf'
+        './nginx.conf',
+        '.env'
     ];
 
     const keyFlag = keyPath ? `-i "${keyPath.replace(/\\/g, '/')}"` : '';

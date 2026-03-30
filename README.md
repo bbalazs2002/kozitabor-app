@@ -22,6 +22,27 @@ Used for containerization and building reproducible images.
 The build tool for lightning-fast frontend development.
 * **Link:** [Vite Documentation](https://vitejs.dev/guide/)
 
+### 4. Environment Variables
+The project uses environment variables for database connections and API keys.
+* **Action Required:** Copy the provided sample file to create your local environment file:
+  ```bash
+  cp .env.sample .env
+
+> **Note:** Open the `.env` file and fill in the required credentials before starting the application.
+
+---
+
+## ⚙️ Configuration
+
+### Environment Files
+
+- `.env.sample`: A template containing all necessary keys (shared in the repository).
+- `.env`: Your local, private configuration (ignored by Git).
+- `.deploy.json`: Stores server connection details for the deploy task.
+- `kozitabor-api/.env.development, kozitabor-react/.env.development`: Variables for the local development environment
+
+> ⚠️ **Important:** Never commit your `.env` or `.deploy.json` files to version control. They are already included in the `.gitignore`.
+
 ---
 
 ## 🏗️ DevTool - The Automation Engine
