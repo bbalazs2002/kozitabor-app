@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Auth tables
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String    // Ezt mi adjuk hozzá a kézi adminhoz
+  role          String    @default("admin")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 1. Kapcsolattartók (Vezetők)
+model Contact {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  name      String
+  tel       String?
+  ordering  Int      @default(0) // Listázási sorrendhez
+  leaders   Leader[]
+}
+
+// 2. Mit hozz magaddal lista
+model Bring {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  title     String
+}
+
+// 3. Napi programbontás
+model Program {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  
+  // Natív PostgreSQL timestamp (mindig déli 12:00)
+  startDay       DateTime
+  endDay         DateTime
+  
+  // Másodperc éjféltől
+  startTimeOffset Int
+  endTimeOffset   Int
+
+  title     String
+  desc      String?
+}
+
+// 4. Információs kártyák (Aloldalak)
+model Info {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  title     String
+  icon      String
+  content   String   @db.Text
+  map       Map?     // Itt már nincs @relation, csak a típus
+}
+
+// 5. Térkép koordináták
+model Map {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  title     String
+  lat       Float
+  lng       Float
+  zoom      Int      @default(15)
+  
+  // A külső kulcs ide kerül:
+  infoId    Int      @unique
+  info      Info     @relation(fields: [infoId], references: [id], onDelete: Cascade)
+}
+
+// 6. Csapatok
+model Team {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  name      String
+  tasks     Task[]
+  leaders   Leader[]
+}
+
+// 7. Tevékenység típusok (pl. Sport, Kézműves)
+model Activity {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  title     String
+  tasks     Task[]
+}
+
+// 8. Feladatok/Beosztás (Csapat + Tevékenység + Időpont)
+model Task {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  
+  // A nap 12:00-s (déli) timestamp-je
+  day        DateTime 
+  
+  // A nap eleje óta eltelt másodpercek
+  timeOffset Int      
+
+  teamId     Int
+  // A Team törlésekor törlődik a bejegyzés
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  activityId Int
+  // Az Activity törlésekor törlődik a bejegyzés
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+}
+
+// 9. Vezetők rendelése csapatokhoz
+model Leader {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  
+  contactId Int
+  // Ha a Contact-ot töröljük, a kapcsolótábla bejegyzése is törlődik:
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  teamId    Int
+  // Ha a Team-et töröljük, akkor is törlődjön a kapcsolat:
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
