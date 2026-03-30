@@ -110,27 +110,37 @@ async function main() {
     ]
   });
 
-  // 8. MAP (1 rekord)
-  const campMap = await prisma.map.create({
-    data: {
-      title: 'Főépület és Étkező',
-      lat: 47.892,
-      lng: 19.985,
-      zoom: 16
-    }
-  });
-
-  // 9. INFO CARDS (5 rekord)
+  // 8. INFO CARDS (5 rekord)
   const infoCards = [
     { title: 'Étkezés', icon: 'Utensils', content: '<h3>Napi menü</h3><p>Reggeli: 8:00<br>Ebéd: 13:00<br>Vacsora: 19:00</p>' },
-    { title: 'Helyszín', icon: 'MapPin', content: '<p>A tábor bejárata a sorompó után balra található.</p>', mapId: campMap.id },
+    { title: 'Helyszín', icon: 'MapPin', content: '<p>A tábor bejárata a sorompó után balra található.</p>' },
     { title: 'Házirend', icon: 'ShieldCheck', content: '<p>Kérjük a takarodó (22:00) betartását!</p>' },
     { title: 'Elsősegély', icon: 'HeartPulse', content: '<p>Az orvosi szoba a főépület földszintjén található.</p>' },
     { title: 'Programokról', icon: 'Info', content: '<p>A változtatás jogát fenntartjuk.</p>' },
   ];
 
+  // Eltároljuk a létrehozott kártyákat, hogy meglegyenek az ID-k
+  const createdInfos = [];
+
   for (const info of infoCards) {
-    await prisma.info.create({ data: info });
+    const newInfo = await prisma.info.create({ data: info });
+    createdInfos.push(newInfo);
+  }
+
+  // 9. MAP (1 rekord)
+  const locationCard = createdInfos.find(i => i.title === 'Helyszín');
+
+  if (locationCard) {
+    await prisma.map.create({
+      data: {
+        title: 'Főépület és Étkező',
+        lat: 47.892,
+        lng: 19.985,
+        zoom: 16,
+        // Itt történik az összekapcsolás:
+        infoId: locationCard.id 
+      }
+    });
   }
 
   // 10. PROGRAMS (Napi 3 program, szintén timestamp alapon)
@@ -156,7 +166,7 @@ async function main() {
     }
   }
 
-  console.log('✨ Minden adat sikeresen feltöltve az új, biztonságos struktúrában!');
+  console.log('✨ Minden adat sikeresen feltöltve.');
 }
 
 main()

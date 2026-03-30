@@ -18,8 +18,6 @@ model User {
   email         String    @unique
   password      String    // Ezt mi adjuk hozzá a kézi adminhoz
   role          String    @default("admin")
-  accounts      Account[]
-  sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

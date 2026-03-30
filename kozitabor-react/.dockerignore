@@ -1,0 +1,23 @@
+# Dependency-k elrejtése (a konténerben fut le az npm install)
+node_modules
+npm-debug.log
+
+# Fejlesztői környezeti fájlok
+.env.development
+.env.test
+.env.local
+
+# Git és egyéb metaadatok
+.git
+.gitignore
+.dockerignore
+
+# Build és log mappák
+build
+dist
+log
+*.log
+
+# Docker specifikus fájlok
+Dockerfile
+docker-compose.yml

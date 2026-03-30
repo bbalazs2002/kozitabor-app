@@ -24,7 +24,7 @@ Thumbs.db
 *.log
 
 # --- Prisma és Adatbázis ---
-/prisma/migrations/
+*/prisma/migrations/
 # Megjegyzés: a schema.prisma-t érdemes feltölteni, de a lokális SQLite fájlt nem:
 *.db
 *.db-journal
@@ -39,3 +39,7 @@ coverage/
 .gz
 *.gz
 **.gz
+
+# --- devtool log + data ---
+log/
+.deploy.json

@@ -7,8 +7,8 @@ async function main() {
 
     await prisma.user.deleteMany();
 
-    console.log('✅ Táblák kiürítve (session, account, user).');
-    console.log('🌱 A Seed-elés elkezdődött');
+    console.log('✅ User tábla kiürítve.');
+    console.log('🌱 A Seed-elés elkezdődött.');
 
     const email = 'kozitabor.admin@mkkozi.hu';
     const hashedPassword = await bcrypt.hash("AdminPassword12345", 10);
@@ -27,11 +27,10 @@ async function main() {
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error("❌ Hiba a seeder futtatása közben:", e);
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error('❌ Hiba a seedelés közben:', e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
