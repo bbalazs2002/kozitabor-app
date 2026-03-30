@@ -560,36 +560,7 @@ const commands = [
         name: 'deploy',
         desc: 'Backup remote, upload builds & configs to remote server via SCP',
         exec: async () => deploy()
-    },
-    {   // status
-        pattern: /^status$/i,
-        name: 'status',
-        desc: 'Check the status of remote Docker containers',
-        exec: async () => {
-            const configPath = path.join(process.cwd(), '.deploy.json');
-            if (!fs.existsSync(configPath)) {
-                console.log('❌ No deployment config found. Run "deploy" first.');
-                return;
-            }
-
-            const { server, user, port, key: keyPath, targetDir } = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            const keyFlag = keyPath ? `-i "${keyPath.replace(/\\/g, '/')}"` : '';
-            const sshPortFlag = port !== '22' ? `-p ${port}` : '';
-            const sshOpts = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null';
-
-            console.log(`\n🔍 Fetching status from ${server}...`);
-            
-            // Lekérjük a ps-t és a logok utolsó sorait
-            const statusCmd = `ssh ${sshOpts} ${sshPortFlag} ${keyFlag} ${user}@${server} "cd ${targetDir} && echo '--- Containers ---' && docker compose ps && echo '\n--- Resource Usage ---' && docker stats --no-stream"`;
-
-            try {
-                const output = execSync(statusCmd, { encoding: 'utf8' });
-                console.log('\n' + output);
-            } catch (err) {
-                console.error('❌ Could not fetch status. Check your connection.');
-            }
-        }
-    },
+    }
 ];
 
 // Command search and execution logic

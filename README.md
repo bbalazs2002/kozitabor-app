@@ -1,6 +1,6 @@
 # 🚀 Kozi Tábor - Project & Deployment Tool
 
-This repository contains the source code for the **Kozi Tábor** web application and its dedicated developer utility, the **DevTool**. The system is designed for rapid development, automated builds, and secure, "one-click" deployments.
+This repository contains the source code for the **Kozitábor** web application and its dedicated developer utility, the **DevTool**. The system is designed for rapid development, automated builds, and secure, "one-click" deployments.
 
 ---
 
