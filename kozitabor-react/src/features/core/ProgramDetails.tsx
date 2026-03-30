@@ -31,11 +31,11 @@ export const ProgramDetails: React.FC = () => {
     return (
         <ContentCard title={prog.title}>
             {/* TIME */}
-            <p className='text-[#3e3028]'>
+            <p className='text-[#3e3028] dark:text-[#c5a059]'>
                 <span className="text-lg font-bold">Kezdés: </span>
                 {`${getDayDate(prog.startDay)} ${formatOffsetToTime(prog.startTimeOffset)}`}
             </p>
-            <p className='text-[#3e3028] mb-5'>
+            <p className='text-[#3e3028] dark:text-[#c5a059] mb-5'>
                 <span className="text-lg font-bold">Befejezés: </span>
                 {`${getDayDate(prog.endDay)} ${formatOffsetToTime(prog.endTimeOffset)}`}
             </p>
