@@ -1,5 +1,5 @@
 {
     "scripts": {
         "devtool": "node devtool.mjs"
-        }
+    }
 }

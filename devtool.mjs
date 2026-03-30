@@ -131,14 +131,6 @@ const askQuestion = (query) => {
     }));
 };
 
-// seeders
-const seedCore = () => {
-    runStep('Seeding Core Data', 'npx dotenv -e .env.development npm run seed', 'kozitabor-api')
-};
-const seedUser = () => {
-    runStep('Seeding Test Users', 'npx dotenv -e .env.development npm run seedUser', 'kozitabor-api')
-};
-
 // initialization
 const init = async () => {
     console.log('🚀 Starting environment initialization...');
@@ -172,6 +164,14 @@ const init = async () => {
     console.log('👉 Use "run" to start the development environment.\n');
 };
 
+// seeders
+const seedCore = () => {
+    runStep('Seeding Core Data', 'npx dotenv -e .env.development npm run seed', 'kozitabor-api')
+};
+const seedUser = () => {
+    runStep('Seeding Test Users', 'npx dotenv -e .env.development npm run seedUser', 'kozitabor-api')
+};
+
 // run dev
 const runDB = async () => {
     runStep('Starting Database', 'docker-compose up -d', 'development-db');
@@ -202,6 +202,44 @@ const runReact = () => {
     react.unref();
     console.log('💻 React started in background (see log/react.log)');
 };
+
+// stop
+const stop = () => {
+    console.log('\n🛑 Shutdown process started...');
+
+    // 1. Docker
+    try {
+        runStep('Stopping Docker containers', 'docker-compose down', 'development-db');
+    } catch (e) {
+        console.log('⚠️ Docker shutdown failed or containers are not running.');
+    }
+
+    // 2. Clear Ports
+    const ports = [5000, 5173];
+    console.log(`\n--- 🧹 Freeing ports: ${ports.join(', ')} ---`);
+
+    if (process.platform === 'win32') {
+        ports.forEach(port => {
+            try {
+                const stdout = execSync(`netstat -ano | findstr :${port}`).toString();
+                const pids = [...new Set(stdout.split('\n')
+                    .map(line => line.trim().split(/\s+/).pop())
+                    .filter(pid => pid && !isNaN(pid) && pid !== '0'))];
+                
+                pids.forEach(pid => {
+                    console.log(`   👉 Terminating PID ${pid} on port ${port}...`);
+                    execSync(`taskkill /F /PID ${pid} /T`, { stdio: 'ignore' });
+                });
+            } catch (e) { /* Port already clear */ }
+        });
+    } else {
+        try {
+            execSync('lsof -ti:5000,5173 | xargs kill -9', { stdio: 'ignore' });
+        } catch (e) { }
+    }
+
+    console.log('\n✅ Everything stopped. Terminal is clean.');
+}
 
 // deploy
 const readRemoteServerData = async () => {
@@ -403,63 +441,44 @@ const commands = [
         pattern: /^seed\s+data$/i,
         name: 'seed data',
         desc: 'Seed core application data',
-        exec: () => seedCore()
+        exec: () => {
+            runDB();
+            setTimeout(() => {
+                seedCore();
+                stop();
+            }, 5000);
+        }
     },
     {   // seed user
         pattern: /^seed\s+user$/i,
         name: 'seed user',
         desc: 'Seed admin user',
-        exec: () => seedUser()
+        exec: () => {
+            runDB();
+            setTimeout(() => {
+                seedUser();
+                stop();
+            }, 5000);
+        }
     },
     {   // seed
         pattern: /^seed$/i,
         name: 'seed',
         desc: 'Seed both core data and admin users',
         exec: () => {
-            seedCore();
-            seedUser();
+            runDB();
+            setTimeout(() => {
+                seedCore();
+                seedUser();
+                stop();
+            }, 5000);
         }
     },
     {   // stop|down|exit
         pattern: /^(stop|down|exit)$/i,
         name: 'stop',
         desc: 'Stop all services (aliases: down, exit)',
-        exec: () => {
-            console.log('\n🛑 Shutdown process started...');
-
-            // 1. Docker
-            try {
-                runStep('Stopping Docker containers', 'docker-compose down', 'development-db');
-            } catch (e) {
-                console.log('⚠️ Docker shutdown failed or containers are not running.');
-            }
-
-            // 2. Clear Ports
-            const ports = [5000, 5173];
-            console.log(`\n--- 🧹 Freeing ports: ${ports.join(', ')} ---`);
-
-            if (process.platform === 'win32') {
-                ports.forEach(port => {
-                    try {
-                        const stdout = execSync(`netstat -ano | findstr :${port}`).toString();
-                        const pids = [...new Set(stdout.split('\n')
-                            .map(line => line.trim().split(/\s+/).pop())
-                            .filter(pid => pid && !isNaN(pid) && pid !== '0'))];
-                        
-                        pids.forEach(pid => {
-                            console.log(`   👉 Terminating PID ${pid} on port ${port}...`);
-                            execSync(`taskkill /F /PID ${pid} /T`, { stdio: 'ignore' });
-                        });
-                    } catch (e) { /* Port already clear */ }
-                });
-            } else {
-                try {
-                    execSync('lsof -ti:5000,5173 | xargs kill -9', { stdio: 'ignore' });
-                } catch (e) { }
-            }
-
-            console.log('\n✅ Everything stopped. Terminal is clean.');
-        }
+        exec: () => stop()
     },
     {   // run db
         pattern: /^run\s+db$/i,
