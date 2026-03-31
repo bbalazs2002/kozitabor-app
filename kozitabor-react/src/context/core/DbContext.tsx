@@ -14,7 +14,7 @@ interface DbContextType {
   getNPrograms: (count: number) => Promise<Program[]>;
   getPrograms: () => Promise<Program[]>;
   getProgram : (id: number) => Promise<Program>;
-  getLivePrograms: () => Promise<LivePrograms[]>;
+  getLivePrograms: () => Promise<LivePrograms>;
   getUpcomingPrograms: (count: number) => Promise<Program[]>;
 }
 
@@ -73,7 +73,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     // A detail lekéréseket általában nem cache-eljük globálisan, 
     // de az API hívás marad a megszokott
     try {
-      return await coreApiRequest(`/info/detail/${id}`);
+      return await coreApiRequest(`/info/${id}`);
     } catch (err) {
       console.error(err);
       return { id: 0, title: "Hiba", icon: "FileExclamationPoint" };
@@ -85,7 +85,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     if (isCacheValid('contacts')) return contacts;
 
     try {
-      const data = await coreApiRequest('/contacts');
+      const data = await coreApiRequest('/contact');
       setContacts(data || []);
       updateCacheTime('contacts');
       return data || [];
@@ -124,7 +124,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
 
   {/* Teams */}
   const getTeams = async (): Promise<Team[]> => {
-    if (isCacheValid('teams')) return teams;
+    if (isCacheValid('team')) return teams;
 
     try {
       const data = await coreApiRequest('/teams');
@@ -143,7 +143,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     if (isCacheValid('programs')) return programs;
 
     try {
-      const data = await coreApiRequest('/programs');
+      const data = await coreApiRequest('/program');
       setPrograms(data || []);
       updateCacheTime('programs');
       return data || [];
@@ -168,12 +168,15 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getLivePrograms = async (): Promise<LivePrograms[]> => {
+  const getLivePrograms = async (): Promise<LivePrograms> => {
     try {
-      return await coreApiRequest('/livePrograms');
+      return await coreApiRequest('/liveProgram');
     } catch (err) {
       console.error(err);
-      return [];
+      return {
+        current: undefined,
+        next: undefined
+      };
     }
   };
 

@@ -1,31 +1,17 @@
 import { useState, useEffect } from 'react';
-import { coreApiRequest } from '../utils/api';
-
-interface Program {
-  id: number;
-  title: string;
-  startTimeOffset: number;
-  endTimeOffset: number;
-}
-
-interface LiveData {
-  current: Program | null;
-  next: Program | null;
-}
+import { useDb } from '../context/core/DbContext';
+import type { LivePrograms } from '../types/database';
 
 export const useLivePrograms = (intervalMs = 60000) => {
-  const [data, setData] = useState<LiveData>({ current: null, next: null });
+  const [data, setData] = useState<LivePrograms>({ current: undefined, next: undefined });
   const [loading, setLoading] = useState(true);
 
+  const context = useDb();
+
   const fetchLive = async () => {
-    try {
-        const response = await coreApiRequest('/livePrograms');    
-        setData(response);
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setLoading(false);
-    }
+    const response = await context.getLivePrograms();
+    setData(response);
+    setLoading(false);
   };
 
   useEffect(() => {

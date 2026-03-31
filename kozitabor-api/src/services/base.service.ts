@@ -39,7 +39,3 @@ export const createBaseService = <T>(modelDelegate: any) => ({
     });
   }
 });
-
-// Használat:
-export const InfoService = createBaseService(prisma.info);
-export const ContactService = createBaseService(prisma.contact);
