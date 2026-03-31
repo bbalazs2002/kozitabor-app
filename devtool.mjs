@@ -241,6 +241,53 @@ const stop = () => {
     console.log('\n✅ Everything stopped. Terminal is clean.');
 }
 
+// build
+const build = async () => {
+    console.log('🏗️ Starting build process (Production)...');
+
+    // 1. Extract VITE_API_BASE_URL from the root .env file
+    let viteUrl = "/kozitabor/api"; 
+    try {
+        const envContent = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf8');
+        const match = envContent.match(/VITE_API_BASE_URL=["']?([^"'\s]+)["']?/);
+        if (match) viteUrl = match[1];
+        console.log(`ℹ️ Using VITE_API_BASE_URL from .env: ${viteUrl}`);
+    } catch (e) {
+        console.log('⚠️ Root .env file not found, using default URL.');
+    }
+
+    // 2. Prepare build directory
+    if (!fs.existsSync('./build')) fs.mkdirSync('./build');
+
+    // 3. Docker Build
+    runStep('API Docker Build', 
+        `docker build --no-cache --platform linux/amd64 -t kozitabor-api:latest ./kozitabor-api`, '.');
+    
+    runStep('React Docker Build', 
+        `docker build --no-cache --platform linux/amd64 --build-arg VITE_API_BASE_URL="${viteUrl}" -t kozitabor-react:latest ./kozitabor-react`, '.');
+
+    // 4. Export using Node.js streams and Zlib
+    const exportImage = async (imageName, fileName) => {
+        console.log(`   📦 Exporting and compressing ${imageName}...`);
+        
+        const dockerSave = spawn('docker', ['save', `${imageName}:latest`]);
+        const gzip = zlib.createGzip();
+        const destination = fs.createWriteStream(path.join('./build', `${fileName}.tar.gz`));
+
+        try {
+            await pipe(dockerSave.stdout, gzip, destination);
+            console.log(`      ✅ ${fileName}.tar.gz created successfully.`);
+        } catch (err) {
+            console.error(`      ❌ Error exporting ${fileName}:`, err.message);
+        }
+    };
+
+    await exportImage('kozitabor-api', 'api');
+    await exportImage('kozitabor-react', 'react');
+
+    console.log('\n✨ Build completed successfully!');
+};
+
 // deploy
 const readRemoteServerData = async () => {
     const configPath = path.join(process.cwd(), '.deploy.json');
@@ -330,28 +377,84 @@ const checkRemoteDirBackup = async ({server, user, port, keyPath, targetDir}) =>
         return false;
     }
 };
+const cleanupRemote = async ({server, user, port, keyPath, targetDir}) => {
+    const keyFlag = keyPath ? `-i "${keyPath.replace(/\\/g, '/')}"` : '';
+    const sshPortFlag = port !== '22' ? `-p ${port}` : '';
+    // Hozzáadtam a -q (quiet) és -T (no tty) flageket a megakadás ellen
+    const sshOpts = '-q -T -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes';
+
+    console.log(`\n🧹 Cleaning up remote environment at ${targetDir}...`);
+
+    // Parancsok összefűzve egy sorba, hogy ne zavarja meg az SSH-t
+    const remoteCleanupCmd = [
+        `if [ -d "${targetDir}" ]; then`,
+        `  cd ${targetDir};`, // Pontosvessző kell az if után
+        `  if [ -f "docker-compose.yml" ]; then`,
+        `    echo "🛑 Stopping existing containers..." && docker compose down --remove-orphans || true;`,
+        `  fi;`,
+        `  echo "🧹 Pruning unused images..." && docker image prune -f;`,
+        `fi`
+    ].join(' ');
+
+    const sshCmd = `ssh ${sshOpts} ${sshPortFlag} ${keyFlag} ${user}@${server} "${remoteCleanupCmd}"`;
+
+    try {
+        execSync(sshCmd, { stdio: 'inherit' });
+        console.log('✅ Docker cleanup finished.');
+    } catch (err) {
+        console.warn('⚠️ Docker cleanup issues, continuing...');
+    }
+
+    return true;
+};
 const uploadFilesToRemote = async ({server, user, port, keyPath, targetDir}) => {
     const filesToUpload = [
-        './build/api.tar.gz',
-        './build/react.tar.gz',
-        './docker-compose.yml',
-        './nginx.conf',
-        '.env'
+        {
+            local: './build/api.tar.gz',
+            remote: './api.tar.gz'
+        },
+        {
+            local: './build/react.tar.gz',
+            remote: './react.tar.gz'
+        },
+        {
+            local: './docker-compose-deploy.yml',
+            remote: './docker-compose.yml'
+        },
+        {
+            local: './nginx.conf',
+            remote: './nginx.conf'
+        },
+        {
+            local: './.env',
+            remote: './.env'
+        },
     ];
 
     const keyFlag = keyPath ? `-i "${keyPath.replace(/\\/g, '/')}"` : '';
     const scpPortFlag = port !== '22' ? `-P ${port}` : '';
+    const sshPortFlag = port !== '22' ? `-p ${port}` : ''; // SSH kisbetűs -p
+    const sshOpts = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null';
 
-    console.log(`\n📦 Uploading files to ${targetDir}...`);
+    console.log(`\n📦 Preparing remote directory and uploading to ${targetDir}...`);
     
     let filesOK = true;
     for (const file of filesToUpload) {
-        if (fs.existsSync(file)) {
-            const fileName = path.basename(file);
-            const scpCmd = `scp ${scpPortFlag} ${keyFlag} "${file}" ${user}@${server}:${targetDir}/${fileName}`;
+        if (fs.existsSync(file.local)) {
+            const fileName = file.local;
+
+            // Delete old file
+            const remoteFilePath = `${targetDir}/${file.remote}`;
+            const cleanupCmd = `ssh ${sshOpts} ${sshPortFlag} ${keyFlag} ${user}@${server} "rm -rf ${remoteFilePath}"`;
+            try {
+                execSync(cleanupCmd, { stdio: 'ignore' });
+            } catch (e) {}
+
+            // Upload file
+            const scpCmd = `scp ${sshOpts} ${scpPortFlag} ${keyFlag} "${fileName}" ${user}@${server}:${remoteFilePath}`;
             runStep(`Uploading ${fileName}`, scpCmd);
         } else {
-            console.log(`⚠️ Warning: ${file} not found! Skipping.`);
+            console.log(`⚠️ Warning: ${file.local} not found! Skipping.`);
             filesOK = false;
         }
     }
@@ -372,7 +475,7 @@ const startRemoteServer = async ({server, user, port, keyPath, targetDir}) => {
 
         echo "🚀 Starting services..."
         # Próbáljuk a modern 'docker compose'-t, ha nincs, a régit
-        docker compose up -d || docker-compose up -d
+        docker compose up -d --force-recreate || docker-compose up -d --force-recreate
 
         echo "✅ Deployment successful!"
         exit
@@ -423,6 +526,9 @@ const startRemoteServer = async ({server, user, port, keyPath, targetDir}) => {
 const deploy = async () => {
     const conf = await readRemoteServerData();
     if (!await checkRemoteDirBackup(conf)) {
+        return;
+    }
+    if (!await cleanupRemote(conf)) {
         return;
     }
     if (!await uploadFilesToRemote(conf)) {
@@ -529,51 +635,7 @@ const commands = [
         pattern: /^build$/i,
         name: 'build',
         desc: 'Build and export Docker images (using zlib)',
-        exec: async () => {
-            console.log('🏗️ Starting build process (Production)...');
-
-            // 1. Extract VITE_API_BASE_URL from the root .env file
-            let viteUrl = "/kozitabor/api"; 
-            try {
-                const envContent = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf8');
-                const match = envContent.match(/VITE_API_BASE_URL=["']?([^"'\s]+)["']?/);
-                if (match) viteUrl = match[1];
-                console.log(`ℹ️ Using VITE_API_BASE_URL from .env: ${viteUrl}`);
-            } catch (e) {
-                console.log('⚠️ Root .env file not found, using default URL.');
-            }
-
-            // 2. Prepare build directory
-            if (!fs.existsSync('./build')) fs.mkdirSync('./build');
-
-            // 3. Docker Build
-            runStep('API Docker Build', 
-                `docker build --platform linux/amd64 -t kozitabor-api:latest ./kozitabor-api`, '.');
-            
-            runStep('React Docker Build', 
-                `docker build --platform linux/amd64 --build-arg VITE_API_BASE_URL="${viteUrl}" -t kozitabor-react:latest ./kozitabor-react`, '.');
-
-            // 4. Export using Node.js streams and Zlib
-            const exportImage = async (imageName, fileName) => {
-                console.log(`   📦 Exporting and compressing ${imageName}...`);
-                
-                const dockerSave = spawn('docker', ['save', `${imageName}:latest`]);
-                const gzip = zlib.createGzip();
-                const destination = fs.createWriteStream(path.join('./build', `${fileName}.tar.gz`));
-
-                try {
-                    await pipe(dockerSave.stdout, gzip, destination);
-                    console.log(`      ✅ ${fileName}.tar.gz created successfully.`);
-                } catch (err) {
-                    console.error(`      ❌ Error exporting ${fileName}:`, err.message);
-                }
-            };
-
-            await exportImage('kozitabor-api', 'api');
-            await exportImage('kozitabor-react', 'react');
-
-            console.log('\n✨ Build completed successfully!');
-        }
+        exec: async () => build()
     },
     {   // deploy
         pattern: /^deploy$/i,

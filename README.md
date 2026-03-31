@@ -79,6 +79,12 @@ node devtool.js
 
 Running this command will display the full list of tasks
 
+> **Important:** Database protection is NOT the responsibility of DevTool.  
+> The deployment process itself does not inherently put existing data at risk. However, if the deployment encounters issues, a full reset (including container and volumes) may be necessary.  
+> **Always ensure you have a complete backup of your database before performing such operations!**  
+>  
+> Additionally, previous files such as images, `.env`, `docker-compose.yml`, `nginx.conf`, and others can be found later in a backup located in the parent directory of the target folder.
+
 ### Example: Initializing the project
 
 ```bash
@@ -95,6 +101,7 @@ Note: Certain tasks, like deploy, will launch an interactive prompt to collect o
 * **`/development-db`**: Local instance for a docker PostgreeSQL database
 * **`/kozitabor-api`**: Backend service source code.
 * **`/kozitabor-react`**: React frontend source code.
-* **`docker-compose.yml`**: Orchestration file for the production environment.
+* **`docker-compose-deploy.yml`**: Orchestration file for deploying the production environment.
+* **`docker-compose.yml`**: Orchestration file for building the production environment.
 * **`nginx.conf`**: Reverse proxy configuration for web access.
 * **`.deploy.json`**: (Auto-generated) Stores the latest successful deployment settings.

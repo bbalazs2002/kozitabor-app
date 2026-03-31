@@ -1,7 +1,7 @@
 # 1. fázis: Build
 
 # 1. fázis: Build
-FROM node:20-alpine as build
+FROM node:20-alpine AS build
 
 # Itt kell definiálni az ARG-okat a FROM után!
 ARG VITE_API_BASE_URL
@@ -20,6 +20,5 @@ RUN npm run build
 # 2. fázis: Kiszolgálás Nginx-szel
 FROM nginx:stable-alpine
 COPY --from=build /app/dist /usr/share/nginx/html/kozitabor
-COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

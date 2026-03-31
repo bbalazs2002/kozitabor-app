@@ -17,8 +17,16 @@ docker exec kozitabor-postgres pg_dump -U ${DB_USER} ${DB_NAME} > backup_$(date 
 # run command in container (-i interactive: console stays open)
 docker exec -it <konténer_neve_vagy_id> <parancs>
 
+# remove containers and volumes
+docker compose down -v
+
 # generate prisma files
 npx prisma generate
 
 # create prisma migration
 npx prisma migrate dev --name [migration name]
+
+# seed in built container
+docker exec -it <konténer_neve_vagy_id> node <path_to_seeder_script>
+docker exec -it kozitabor-api node dist/seeder/seed.js
+docker exec -it kozitabor-api node dist/seeder/users.js

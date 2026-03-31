@@ -12,15 +12,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"
     volumes:
       - kozitabor_postgres_data:/var/lib/postgresql/data
 
   kozitabor-api:
+    image: kozitabor-api:latest
     container_name: kozitabor-api
-    build: ./kozitabor-api
-    restart: always
     environment:
       DATABASE_URL: "postgresql://${DB_USER}:${DB_PASS}@kozitabor-db:5432/${DB_NAME}?schema=public"
       JWT_SECRET: ${JWT_SECRET}
@@ -28,18 +25,16 @@ services:
       API_PORT: ${API_PORT}
       CLIENT_URL: ${CLIENT_URL}
       CLIENT_PORT: ${CLIENT_PORT}
+    restart: always
     depends_on:
       kozitabor-db:
         condition: service_healthy
-    ports:
-      - "5000:5000"
+    env_file:
+      - .env
 
   kozitabor-react:
+    image: kozitabor-react:latest
     container_name: kozitabor-react
-    build:
-      context: ./kozitabor-react
-      args:
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     restart: always
     ports:
       - "3000:80"
