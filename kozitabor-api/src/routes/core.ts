@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import * as coreController from '../controllers/core.controller.js';
+import { idParamMiddleware } from '../middleware/param.middleware.js';
 
 const router = Router();
+
+// middlewares
+router.param('id', idParamMiddleware);
 
 // --- INFO & MAP ---
 router.get('/info', coreController.getInfos);

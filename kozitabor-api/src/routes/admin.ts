@@ -1,59 +1,67 @@
 import { Router } from 'express';
 import * as adminController from '../controllers/admin.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import { idParamMiddleware } from '../middleware/param.middleware.js';
+import { ControllerFactory as CF } from '../utils/controllerFactory.js';
+import { activityService, bringService, contactService, infoService, programService, taskService, teamService } from '../services/admin/index.js';
 
 const router = Router();
 
+// middlewares
 router.use(requireAuth);
+router.param('id', idParamMiddleware);
+
+// error handling
+const catchAsync = (fn: any) => (req: any, res: any, next: any) => Promise.resolve(fn(req, res, next)).catch(next);
 
 // --- INFO & MAP ---
-router.get('/info', adminController.getInfos);
-router.get('/info/:id', adminController.getInfo);
-router.post('/info', adminController.createInfo);
-router.put('/info/:id', adminController.updateInfo);
-router.delete('/info/:id', adminController.removeInfo);
+router.get('/info', catchAsync(CF.getAll(infoService, { include: { map: true }, orderBy: { id: 'desc' } })));
+router.get('/info/:id', catchAsync(CF.getOne(infoService, { map: true })));
+router.post('/info', catchAsync(adminController.createInfo)); // Egyedi logika (térkép create)
+router.put('/info/:id', catchAsync(adminController.updateInfo)); // Egyedi logika (térkép upsert)
+router.delete('/info/:id', catchAsync(CF.delete(infoService)));
 
 // --- CONTACT ---
-router.get('/contact', adminController.getContacts);
-router.get('/contact/:id', adminController.getContact);
-router.post('/contact', adminController.createContact);
-router.put('/contact/:id', adminController.updateContact);
-router.post('/contact/reorder', adminController.reorderContacts);
-router.delete('/contact/:id', adminController.removeContact);
+router.get('/contact', catchAsync(CF.getAll(contactService, { orderBy: { ordering: 'asc' } })));
+router.get('/contact/:id', catchAsync(CF.getOne(contactService)));
+router.post('/contact', catchAsync(CF.create(contactService)));
+router.put('/contact/:id', catchAsync(CF.update(contactService)));
+router.post('/contact/reorder', catchAsync(CF.reorder(contactService)));
+router.delete('/contact/:id', catchAsync(CF.delete(contactService)));
 
 // --- TEAMS ---
-router.get('/team', adminController.getTeams);
-router.get('/team/:id', adminController.getTeam);
-router.post('/team', adminController.createTeam);
-router.put('/team/:id', adminController.updateTeam);
-router.delete('/team/:id', adminController.removeTeam);
+router.get('/team', catchAsync(CF.getAll(teamService, { orderBy: { name: 'asc' } })));
+router.get('/team/:id', catchAsync(CF.getOne(teamService, { leaders: { include: { contact: true } } })));
+router.post('/team', catchAsync(adminController.createTeam)); // Egyedi logika (kapcsolódó tábla)
+router.put('/team/:id', catchAsync(adminController.updateTeam)); // Egyedi logika (kapcsolódó tábla)
+router.delete('/team/:id', catchAsync(CF.delete(teamService)));
 
 // --- ACTIVITIES ---
-router.get('/activity', adminController.getActivities);
-router.get('/activity/:id', adminController.getActivity);
-router.post('/activity', adminController.createActivity);
-router.put('/activity/:id', adminController.updateActivity);
-router.delete('/activity/:id', adminController.removeActivity);
+router.get('/activity', catchAsync(CF.getAll(activityService, { orderBy: { title: 'asc' } })));
+router.get('/activity/:id', catchAsync(CF.getOne(activityService)));
+router.post('/activity', catchAsync(CF.create(activityService)));
+router.put('/activity/:id', catchAsync(CF.update(activityService)));
+router.delete('/activity/:id', catchAsync(CF.delete(activityService)));
 
 // --- TASKS ---
-router.get('/task', adminController.getTasks);
-router.get('/task/:id', adminController.getTask);
-router.post('/task', adminController.createTask);
-router.delete('/task/:id', adminController.removeTask);
+router.get('/task', catchAsync(CF.getAll(taskService, { include: { team: true, activity: true }, orderBy: [{ day: 'asc' }, { timeOffset: 'asc' }] })));
+router.get('/task/:id', catchAsync(CF.getOne(taskService)));
+router.post('/task', catchAsync(adminController.createTask)); // Egyedi logika (ciklusos mentés)
+router.delete('/task/:id', catchAsync(CF.delete(taskService)));
 
 // --- BRING ---
-router.get('/bring', adminController.getBrings);
-router.post('/bring', adminController.createBring);
-router.delete('/bring/:id', adminController.removeBring);
+router.get('/bring', catchAsync(CF.getAll(bringService, { orderBy: { title: 'asc' } })));
+router.post('/bring', catchAsync(CF.create(bringService)));
+router.delete('/bring/:id', catchAsync(CF.delete(bringService)));
 
 // --- PROGRAM ---
-router.get('/program', adminController.getPrograms);
-router.get('/program/:id', adminController.getProgram);
-router.post('/program', adminController.createProgram);
-router.put('/program/:id', adminController.updateProgram);
-router.delete('/program/:id', adminController.removeProgram);
+router.get('/program', catchAsync(CF.getAll(programService, { orderBy: [{ startDay: 'asc' }, { startTimeOffset: 'asc' }] })));
+router.get('/program/:id', catchAsync(CF.getOne(programService)));
+router.post('/program', catchAsync(adminController.createProgram)); // Egyedi logika (dátum normalizálás)
+router.put('/program/:id', catchAsync(adminController.updateProgram)); // Egyedi logika (dátum normalizálás)
+router.delete('/program/:id', catchAsync(CF.delete(programService)));
 
 // --- DASHBOARD ---
-router.get('/dashboard', adminController.GetDashboard);
+router.get('/dashboard', catchAsync(adminController.GetDashboard)); // Egyedi statisztikai lekérés
 
 export default router;
