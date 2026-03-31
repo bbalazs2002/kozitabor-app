@@ -1,19 +1,21 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { type Bring, type Contact, type Info, type LivePrograms, type Program, type Team  } from '../../types/database';
+import { createContext, useContext, useState, type ReactNode, useCallback } from 'react';
+import { type Bring, type Contact, type Info, type LivePrograms, type Program, type Team } from '../../types/database';
 import { coreApiRequest } from '../../utils/api';
 
+const CACHE_TIME = 60000; // 1 perc
+
 interface DbContextType {
-  getNInfos: (count: number) => Promise<Info[]>;
   getInfos: () => Promise<Info[]>;
+  getNInfos: (count: number) => Promise<Info[]>;
   getInfo: (id: number) => Promise<Info>;
   getContacts: () => Promise<Contact[]>;
   getNContacts: (count: number) => Promise<Contact[]>;
   getBring: () => Promise<Bring[]>;
   getNBring: (count: number) => Promise<Bring[]>;
   getTeams: () => Promise<Team[]>;
-  getNPrograms: (count: number) => Promise<Program[]>;
   getPrograms: () => Promise<Program[]>;
-  getProgram : (id: number) => Promise<Program>;
+  getNPrograms: (count: number) => Promise<Program[]>;
+  getProgram: (id: number) => Promise<Program>;
   getLivePrograms: () => Promise<LivePrograms>;
   getUpcomingPrograms: (count: number) => Promise<Program[]>;
 }
@@ -21,195 +23,71 @@ interface DbContextType {
 const DbContext = createContext<DbContextType | undefined>(undefined);
 
 export const DbProvider = ({ children }: { children: ReactNode }) => {
-  const [infos, setInfos] = useState<Info[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [bring, setBring] = useState<Bring[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [lastFetched, setLastFetched] = useState<Record<string, number | null>>({});
 
-  // Időbélyegek tárolása (milliszekundumban)
-  const [lastFetched, setLastFetched] = useState<{ [key: string]: number | null }>({
-    infos: null,
-    contacts: null,
-    bring: null,
-    teams: null,
-    programs: null,
-  });
+  // --- READ-ONLY CACHE ENGINE ---
+  const useReadCache = <T,>(entityKey: string, endpoint: string) => {
+    const [data, setData] = useState<T[]>([]);
 
-  // Segédfüggvény az idő ellenőrzéséhez (60 másodperc = 60000 ms)
-  const isCacheValid = (key: keyof typeof lastFetched) => {
-    const last = lastFetched[key];
-    if (!last) return false;
-    const now = Date.now();
-    return now - last < 60000; // 1 perc
-  };
-  // Segédfüggvény az időbélyeg frissítéséhez
-  const updateCacheTime = (key: string) => {
-    setLastFetched(prev => ({ ...prev, [key]: Date.now() }));
-  };
+    const getAll = useCallback(async (): Promise<T[]> => {
+      const last = lastFetched[entityKey];
+      if (last && Date.now() - last < CACHE_TIME) return data;
 
-  {/* INFOS */}
-  const getInfos = async (): Promise<Info[]> => {
-    if (isCacheValid('infos')) return infos;
+      try {
+        const fresh = await coreApiRequest(endpoint);
+        setData(fresh || []);
+        setLastFetched(prev => ({ ...prev, [entityKey]: Date.now() }));
+        return fresh || [];
+      } catch (err) {
+        console.error(`[CORE-${entityKey}] Fetch failed:`, err);
+        setLastFetched(prev => ({ ...prev, [entityKey]: Date.now() }));
+        return [];
+      }
+    }, [data, entityKey, endpoint]);
 
-    try {
-      const data = await coreApiRequest('/info');
-      setInfos(data || []);
-      updateCacheTime('infos');
-      return data || [];
-    } catch (err) {
-      console.error(err);
-      updateCacheTime('infos'); // Hiba esetén is frissítjük, hogy ne ciklusozzon
-      return [];
-    }
+    const getN = async (count: number) => {
+      const all = await getAll();
+      return all.slice(0, count);
+    };
+
+    const getById = async (id: number) => coreApiRequest(`${endpoint}/${id}`);
+
+    return { getAll, getN, getById };
   };
 
-  const getNInfos = async (count: number): Promise<Info[]> => {
-    const data = await getInfos();
-    return data.slice(0, count);
-  };
+  // --- ENTITÁSOK DEFINIÁLÁSA ---
+  const infos = useReadCache<Info>('infos', '/info');
+  const contacts = useReadCache<Contact>('contacts', '/contact');
+  const bring = useReadCache<Bring>('bring', '/bring');
+  const teams = useReadCache<Team>('teams', '/teams');
+  const programs = useReadCache<Program>('programs', '/program');
 
-  const getInfo = async (id: number): Promise<Info> => {
-    // A detail lekéréseket általában nem cache-eljük globálisan, 
-    // de az API hívás marad a megszokott
-    try {
-      return await coreApiRequest(`/info/${id}`);
-    } catch (err) {
-      console.error(err);
-      return { id: 0, title: "Hiba", icon: "FileExclamationPoint" };
-    }
-  };
-
-  {/* Contact */}
-  const getContacts = async (): Promise<Contact[]> => {
-    if (isCacheValid('contacts')) return contacts;
-
-    try {
-      const data = await coreApiRequest('/contact');
-      setContacts(data || []);
-      updateCacheTime('contacts');
-      return data || [];
-    } catch (err) {
-      console.error(err);
-      updateCacheTime('contacts');
-      return [];
-    }
-  };
-
-  const getNContacts = async (count: number): Promise<Contact[]> => {
-    const data = await getContacts();
-    return data.slice(0, count);
-  };
-
-  {/* Bring */}
-  const getBring = async (): Promise<Bring[]> => {
-    if (isCacheValid('bring')) return bring;
-
-    try {
-      const data = await coreApiRequest('/bring');
-      setBring(data || []);
-      updateCacheTime('bring');
-      return data || [];
-    } catch (err) {
-      console.error(err);
-      updateCacheTime('bring');
-      return [];
-    }
-  };
-
-  const getNBring = async (count: number): Promise<Bring[]> => {
-    const data = await getBring();
-    return data.slice(0, count);
-  };
-
-  {/* Teams */}
-  const getTeams = async (): Promise<Team[]> => {
-    if (isCacheValid('team')) return teams;
-
-    try {
-      const data = await coreApiRequest('/teams');
-      setTeams(data || []);
-      updateCacheTime('teams');
-      return data || [];
-    } catch (err) {
-      console.error(err);
-      updateCacheTime('teams');
-      return [];
-    }
-  };
-
-  {/* Live programs */}
-  const getPrograms = async (): Promise<Program[]> => {
-    if (isCacheValid('programs')) return programs;
-
-    try {
-      const data = await coreApiRequest('/program');
-      setPrograms(data || []);
-      updateCacheTime('programs');
-      return data || [];
-    } catch (err) {
-      console.error(err);
-      updateCacheTime('programs');
-      return [];
-    }
-  };
-
-  const getNPrograms = async (count: number): Promise<Program[]> => {
-    const data = await getPrograms();
-    return data.slice(0, count);
-  };
-
-  const getProgram = async (id: number): Promise<Program> => {
-    try {
-      return await coreApiRequest(`/program/${id}`);
-    } catch (err) {
-      console.error(err);
-      return { id: 0, title: '', desc: '', startDay: new Date(), endDay: new Date(), startTimeOffset: 43200, endTimeOffset: 43200 };
-    }
-  };
+  // --- EGYEDI KLIENS LOGIKÁK ---
 
   const getLivePrograms = async (): Promise<LivePrograms> => {
     try {
       return await coreApiRequest('/liveProgram');
     } catch (err) {
       console.error(err);
-      return {
-        current: undefined,
-        next: undefined
-      };
+      return { current: undefined, next: undefined };
     }
   };
 
   const getUpcomingPrograms = async (count: number = 3): Promise<Program[]> => {
-    // Itt is a közös getPrograms-t hívjuk, ami már kezeli a cache-t
-    const allPrograms = await getPrograms();
+    const allPrograms = await programs.getAll();
     const now = new Date();
-
-    const todayNoonUTC = Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      12, 0, 0, 0
-    );
-
-    const currentUTCOffset = (now.getUTCHours() * 3600) +
-                             (now.getUTCMinutes() * 60) +
-                             now.getUTCSeconds();
+    
+    // Időbélyegek kiszámítása az összehasonlításhoz
+    const todayNoonUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0, 0);
+    const currentUTCOffset = (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds();
 
     return allPrograms
       .filter(program => {
         const pDate = new Date(program.endDay);
-        const programDateUTC = Date.UTC(
-          pDate.getUTCFullYear(),
-          pDate.getUTCMonth(),
-          pDate.getUTCDate(),
-          12, 0, 0, 0
-        );
+        const programDateUTC = Date.UTC(pDate.getUTCFullYear(), pDate.getUTCMonth(), pDate.getUTCDate(), 12, 0, 0, 0);
 
         if (programDateUTC > todayNoonUTC) return true;
-        if (programDateUTC === todayNoonUTC) {
-          return program.endTimeOffset > currentUTCOffset;
-        }
+        if (programDateUTC === todayNoonUTC) return program.endTimeOffset > currentUTCOffset;
         return false;
       })
       .slice(0, count);
@@ -217,11 +95,13 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <DbContext.Provider value={{ 
-        getNInfos, getInfos, getInfo, 
-        getContacts, getNContacts,
-        getBring, getNBring,
-        getTeams,
-        getNPrograms, getPrograms, getProgram, getLivePrograms, getUpcomingPrograms
+      getInfos: infos.getAll, getNInfos: infos.getN, getInfo: infos.getById,
+      getContacts: contacts.getAll, getNContacts: contacts.getN,
+      getBring: bring.getAll, getNBring: bring.getN,
+      getTeams: teams.getAll,
+      getPrograms: programs.getAll, getNPrograms: programs.getN, getProgram: programs.getById,
+      getLivePrograms,
+      getUpcomingPrograms
     }}>
       {children}
     </DbContext.Provider>
