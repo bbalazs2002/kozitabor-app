@@ -1,12 +1,16 @@
 import { useLocation } from "react-router-dom";
 import { InfoCard } from "../../components/core/InfoCard"
-import { InfoCardItemIcon } from "../../components/core/InfoCardItemIcon"
 import { Check, CheckCheckIcon } from 'lucide-react';
 import { useDb } from "../../context/core/DbContext";
 import { useEffect, useState } from "react";
 import type { Bring } from "../../types/database";
+import { CardItem } from "../../components/core/CardItem";
+import { useTheme } from "../../context/core/ThemeContext";
 
 const WhatToBringBlock: React.FC = () => {
+    // style
+    const {colors} = useTheme();
+
     // Router path
     const location = useLocation();
     const isHomePage = location.pathname === "/";
@@ -32,15 +36,19 @@ const WhatToBringBlock: React.FC = () => {
     if (localLoading) return <div>Betöltés...</div>;
     
     return (
-        <InfoCard 
-            title='Mit hozz?' 
-            icon={CheckCheckIcon} 
-            buttonColor='#4e7a3a' 
-            buttonText={isHomePage ? 'Teljes lista' : undefined} 
-            buttonTo="/whatToBring">
-            {items.map(item => 
-                <InfoCardItemIcon key={item.id} icon={<Check/>}>{item.title}</InfoCardItemIcon>
-            )}
+        <InfoCard
+            title="Mit hozz?"
+            icon={CheckCheckIcon}
+            buttonText={isHomePage ? 'Teljes lista' : undefined}
+            buttonTo="/whatToBring"
+        >
+            <div className="flex flex-col divide-y divide-gray-300 dark:divide-gray-700">
+                {items.map(item => (
+                    <CardItem key={item.id} icon={<Check color={colors.icon} />} className="px-2">
+                        {item.title}
+                    </CardItem>
+                ))}
+            </div>
         </InfoCard>
 )};
 

@@ -130,6 +130,31 @@ const askQuestion = (query) => {
         resolve(ans);
     }));
 };
+/**
+ * Killing processed based on port
+ */
+const freePort = (ports) => {
+    console.log(`\n--- 🧹 Freeing port(s): ${ports.join(', ')} ---`);
+    if (process.platform === 'win32') {
+        ports.forEach(port => {
+            try {
+                const stdout = execSync(`netstat -ano | findstr :${port}`).toString();
+                const pids = [...new Set(stdout.split('\n')
+                    .map(line => line.trim().split(/\s+/).pop())
+                    .filter(pid => pid && !isNaN(pid) && pid !== '0'))];
+                
+                pids.forEach(pid => {
+                    console.log(`   👉 Terminating PID ${pid} on port ${port}...`);
+                    execSync(`taskkill /F /PID ${pid} /T`, { stdio: 'ignore' });
+                });
+            } catch (e) { /* Port already clear */ }
+        });
+    } else {
+        try {
+            execSync(`lsof -ti:${ports.join(',')} | xargs kill -9`, { stdio: 'ignore' });
+        } catch (e) { }
+    }
+};
 
 // initialization
 const init = async () => {
@@ -179,7 +204,7 @@ const runDB = async () => {
 const runAPI = () => {
     ensureLogDir();
     const apiLog = fs.openSync('./log/api.log', 'w');
-    const api = spawn('npm', ['run', 'dev'], {
+    const api = spawn('npm', ['run', 'dev -- --host'], {
         detached: true,
         shell: true,
         windowsHide: true,
@@ -192,7 +217,7 @@ const runAPI = () => {
 const runReact = () => {
     ensureLogDir();
     const reactLog = fs.openSync('./log/react.log', 'w');
-    const react = spawn('npm', ['run', 'dev'], {
+    const react = spawn('npm', ['run', 'dev -- --host'], {
         detached: true,
         shell: true,
         windowsHide: true,
@@ -205,41 +230,31 @@ const runReact = () => {
 
 // stop
 const stop = () => {
-    console.log('\n🛑 Shutdown process started...');
+    stopReact();
+    stopAPI();
+    stopDB();
 
-    // 1. Docker
+    console.log('\n✅ Everything stopped. Terminal is clean.');
+}
+const stopDB = () => {
+    console.log('\n--- 🛑 Shutting down database ---');
+
     try {
         runStep('Stopping Docker containers', 'docker-compose down', 'development-db');
     } catch (e) {
         console.log('⚠️ Docker shutdown failed or containers are not running.');
     }
 
-    // 2. Clear Ports
-    const ports = [5000, 5173];
-    console.log(`\n--- 🧹 Freeing ports: ${ports.join(', ')} ---`);
-
-    if (process.platform === 'win32') {
-        ports.forEach(port => {
-            try {
-                const stdout = execSync(`netstat -ano | findstr :${port}`).toString();
-                const pids = [...new Set(stdout.split('\n')
-                    .map(line => line.trim().split(/\s+/).pop())
-                    .filter(pid => pid && !isNaN(pid) && pid !== '0'))];
-                
-                pids.forEach(pid => {
-                    console.log(`   👉 Terminating PID ${pid} on port ${port}...`);
-                    execSync(`taskkill /F /PID ${pid} /T`, { stdio: 'ignore' });
-                });
-            } catch (e) { /* Port already clear */ }
-        });
-    } else {
-        try {
-            execSync('lsof -ti:5000,5173 | xargs kill -9', { stdio: 'ignore' });
-        } catch (e) { }
-    }
-
-    console.log('\n✅ Everything stopped. Terminal is clean.');
-}
+    console.log('\n✅ Database stopped.');
+};
+const stopAPI = () => {
+    freePort([5000]);
+    console.log('\n✅ API stopped.');
+};
+const stopReact = () => {
+    freePort([5173]);
+    console.log('\n✅ React stopped.');
+};
 
 // build
 const build = async () => {
@@ -587,6 +602,24 @@ const commands = [
         desc: 'Stop all services (aliases: down, exit)',
         exec: () => stop()
     },
+    {   // stop|down|exit db
+        pattern: /^(stop|down|exit)\s+db$/i,
+        name: 'stop db',
+        desc: 'Stop database (aliases: down db, exit db)',
+        exec: () => stopDB()
+    },
+    {   // stop|down|exit api
+        pattern: /^(stop|down|exit)\sapi+$/i,
+        name: 'stop api',
+        desc: 'Stop API (aliases: down api, exit api)',
+        exec: () => stopAPI()
+    },
+    {   // stop|down|exit React
+        pattern: /^(stop|down|exit)\s+react$/i,
+        name: 'stop react',
+        desc: 'Stop React frontend (aliases: down react, exit react)',
+        exec: () => stopReact()
+    },
     {   // run db
         pattern: /^run\s+db$/i,
         name: 'run db',
@@ -614,10 +647,10 @@ const commands = [
             writeActiveServiceList(['react'], {react: reactPort});
         }
     },
-    {   // run (all)
-        pattern: /^run$/i,
+    {   // run|start (all)
+        pattern: /^(run|start)$/i,
         name: 'run',
-        desc: 'Start all services (DB, API, React)',
+        desc: 'Start all services (DB, API, React) (aliases: start)',
         exec: async () => {
             console.log('🚀 Starting all services...');
 

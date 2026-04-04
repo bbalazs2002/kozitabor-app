@@ -10,9 +10,11 @@ interface DbContextType {
   getInfo: (id: number) => Promise<Info>;
   getContacts: () => Promise<Contact[]>;
   getNContacts: (count: number) => Promise<Contact[]>;
+  getContact: (id: number) => Promise<Contact>;
   getBring: () => Promise<Bring[]>;
   getNBring: (count: number) => Promise<Bring[]>;
   getTeams: () => Promise<Team[]>;
+  getTeam: (id: number) => Promise<Team>;
   getPrograms: () => Promise<Program[]>;
   getNPrograms: (count: number) => Promise<Program[]>;
   getProgram: (id: number) => Promise<Program>;
@@ -59,7 +61,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
   const infos = useReadCache<Info>('infos', '/info');
   const contacts = useReadCache<Contact>('contacts', '/contact');
   const bring = useReadCache<Bring>('bring', '/bring');
-  const teams = useReadCache<Team>('teams', '/teams');
+  const teams = useReadCache<Team>('teams', '/team');
   const programs = useReadCache<Program>('programs', '/program');
 
   // --- EGYEDI KLIENS LOGIKÁK ---
@@ -96,9 +98,9 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
   return (
     <DbContext.Provider value={{ 
       getInfos: infos.getAll, getNInfos: infos.getN, getInfo: infos.getById,
-      getContacts: contacts.getAll, getNContacts: contacts.getN,
+      getContacts: contacts.getAll, getNContacts: contacts.getN, getContact: contacts.getById,
       getBring: bring.getAll, getNBring: bring.getN,
-      getTeams: teams.getAll,
+      getTeams: teams.getAll, getTeam: teams.getById,
       getPrograms: programs.getAll, getNPrograms: programs.getN, getProgram: programs.getById,
       getLivePrograms,
       getUpcomingPrograms

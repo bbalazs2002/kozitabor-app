@@ -1,13 +1,16 @@
 import { useLocation } from "react-router-dom";
 import { InfoCard } from "../../components/core/InfoCard"
-import { InfoCardItemIcon } from "../../components/core/InfoCardItemIcon"
-import { Contact2Icon } from 'lucide-react';
+import { Contact2Icon, Phone } from 'lucide-react';
 import { useDb } from "../../context/core/DbContext";
 import { type Contact } from "../../types/database"
-import DynamicIcon from "../../components/core/DynamicIcon";
 import { useEffect, useState } from "react";
+import { CardItem } from "../../components/core/CardItem";
+import { useTheme } from "../../context/core/ThemeContext";
 
 const ContactBlock: React.FC = () =>  {
+    // style
+    const {colors} = useTheme();
+
     // Router path
     const location = useLocation();
     const isHomePage = location.pathname === "/";
@@ -34,22 +37,25 @@ const ContactBlock: React.FC = () =>  {
     
     // Component
     return (
-        <InfoCard 
-            title='Kapcsolatok' 
-            icon={Contact2Icon} 
-            buttonText={isHomePage ? 'További kapcsolatok' : undefined} 
-            buttonColor='#4e7a3a'
-            buttonTo='/contacts'
+        <InfoCard
+            title="Kapcsolatok"
+            icon={Contact2Icon}
+            buttonText={isHomePage ? 'További kapcsolatok' : undefined}
+            buttonTo="/contacts"
         >
+        <div className="flex flex-col divide-y divide-gray-300 dark:divide-gray-700">
             {contacts.map((contact) => (
-            <InfoCardItemIcon 
+            <CardItem
                 key={contact.id}
-                icon={<DynamicIcon name="Phone" size={22} className="mr-3 text-[#5d4037] dark:text-[#d4af37]" />}
+                to={contact.tel ? `tel:${contact.tel}` : undefined}
+                icon={<Phone color={colors.icon} />}
+                className="px-2"
             >
                 <span>{contact.name}</span>
                 <span>{contact.tel}</span>
-            </InfoCardItemIcon>
+            </CardItem>
             ))}
+        </div>
         </InfoCard>
     )};
 

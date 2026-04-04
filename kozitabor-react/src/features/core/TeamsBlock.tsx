@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { ContentCard } from '../../components/core/ContentCard';
 import { useDb } from '../../context/core/DbContext';
 import type { Team } from '../../types/database';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 export const TeamsBlock: React.FC = () => {
+    // navigation
+    const navigate = useNavigate();
+
     // DB
     const context = useDb();
     const [teams, setTeams] = useState<Team[]>([]);
@@ -33,6 +36,7 @@ export const TeamsBlock: React.FC = () => {
                      <div key={team.id}>
                         {/* Csoportnév - Cinzel betűtípussal, nagy méretben */}
                         <h2
+                            onClick={() => navigate(`/team/${team.id}`)}
                             className="font-cinzel text-3xl md:text-4xl text-[#3e3028] mt-4
                                         dark:text-[#c5a059]">
                             {team.name}

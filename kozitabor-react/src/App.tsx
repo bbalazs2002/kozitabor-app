@@ -31,12 +31,14 @@ import AuthProviders from './providers/AuthProviders';
 import AuthLayout from './layouts/AuthLayout';
 import { AuthProvider } from './context/admin/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { TeamDetails } from './features/core/TeamDetails';
 
 function App() {
   return (
     <BrowserRouter basename="/kozitabor/">
       <AuthProvider>
         <Routes>
+
           {/* FELHASZNÁLÓI OLDALAK */}
           <Route element={<CoreProviders />}>
             <Route element={<CoreLayout />}>
@@ -46,6 +48,7 @@ function App() {
               <Route path="info" element={<InfoPage />} />
               <Route path="info/:infoId" element={<InfoDetailsPage />} />
               <Route path="team" element={<TeamPage />} />
+              <Route path="team/:teamId" element={<TeamDetails />} />
               <Route path="contacts" element={<ContactPage />} />
               <Route path="whattobring" element={<WhatToBringPage />} />
             </Route>

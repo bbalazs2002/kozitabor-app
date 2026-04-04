@@ -20,10 +20,10 @@ router.get('/info/:id', catchAsync(CF.getOne(infoService, { map: true })));
 // --- CONTACTS ---
 router.get('/contact',  catchAsync(CF.getAll(contactService, { orderBy: { ordering: 'asc' } })));
 
-// --- MIT HOZZ (BRING) ---
+// --- BRING ---
 router.get('/bring',    catchAsync(CF.getAll(bringService, { orderBy: { title: 'asc' } })));
 
-// --- CSOPORT (TEAMS) ---
+// --- TEAMS ---
 router.get('/team',     catchAsync(CF.getAll(teamService, {
   orderBy: { name: 'asc' },
   include: {
@@ -31,6 +31,12 @@ router.get('/team',     catchAsync(CF.getAll(teamService, {
       orderBy: { contact: { name: 'asc' } },
       include: { contact: true }
     }
+  }
+})));
+router.get('/team/:id', catchAsync(CF.getOne(teamService, {
+  leaders: {
+    orderBy: { contact: { name: 'asc' } },
+    include: { contact: true }
   }
 })));
 

@@ -30,22 +30,19 @@ export const CoreLayout: React.FC = () => {
                   <NavBtn 
                       label="PROGRAM" 
                       icon={Calendar} 
-                      color1="#4a1110"
-                      color2="#a52a2a"
+                      index={0}
                       to="program"
                   />
                   <NavBtn 
                       label="CSOPORT" 
                       icon={Users}
-                      color1="#0d1a35"
-                      color2="#203a6f"
+                      index={1}
                       to="team"
                   />
                   <NavBtn 
                       label="INFÓK" 
-                      icon={MapPin} 
-                      color1="#1a2e12"
-                      color2="#3e5c2e"
+                      icon={MapPin}
+                      index={2}
                       to="info"
                   />
               </div>
@@ -54,10 +51,10 @@ export const CoreLayout: React.FC = () => {
 
         {/* Navigate back buttons */}
         {!isHomePage && <div className="flex gap-1 justify-start w-full mb-1 max-w-[25rem]">
-          <Button color='#4e7a3a' onClick={() => navigate(-1)}>
+          <Button onClick={() => navigate(-1)}>
             <ChevronLeft /> Vissza
           </Button>
-          <Button to='/' color='#4e7a3a'>
+          <Button to='/'>
             <Home /> Főoldal
           </Button>
         </div>}

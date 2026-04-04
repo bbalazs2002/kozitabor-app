@@ -6,7 +6,6 @@ const CoreProviders = () => {
   return (
     <DbProvider>
       <ThemeProvider>
-        {/* Az Outlet mondja meg a Routernek, hogy hova kerüljenek a gyerek útvonalak */}
         <Outlet />
       </ThemeProvider>
     </DbProvider>
