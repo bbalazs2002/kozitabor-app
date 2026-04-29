@@ -20,6 +20,7 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "prisma": "^7.5.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -29,7 +30,6 @@
     "pg": "^8.20.0"
   },
   "devDependencies": {
-    "@scalar/express-api-reference": "^0.9.6",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -38,10 +38,6 @@
     "@types/node": "^25.5.0",
     "@types/pg": "^8.20.0",
     "dotenv-cli": "^11.0.0",
-    "express-jsdoc-swagger": "^1.8.0",
-    "express-list-endpoints": "^7.1.1",
-    "prisma": "^7.5.0",
-    "prisma-json-schema-generator": "^5.1.5",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }

@@ -1,11 +1,6 @@
 generator client {
   provider = "prisma-client-js"
 }
-generator jsonSchema {
-  provider = "prisma-json-schema-generator"
-  output   = "./"
-}
-
 datasource db {
   provider = "postgresql"
 }
