@@ -621,7 +621,7 @@ const commands = [
         exec: () => stopReact()
     },
     {   // run db
-        pattern: /^run\s+db$/i,
+        pattern: /^(run|start)\s+db$/i,
         name: 'run db',
         desc: 'Start the Docker database container',
         exec: async () => {
@@ -630,7 +630,7 @@ const commands = [
         }
     },
     {   // run api
-        pattern: /^run\s+api$/i,
+        pattern: /^(run|start)\s+api$/i,
         name: 'run api',
         desc: 'Start the Backend API in the background',
         exec: async () => {
@@ -639,7 +639,7 @@ const commands = [
         }
     },
     {   // run react
-        pattern: /^run\s+react$/i,
+        pattern: /^(run|start)\s+react$/i,
         name: 'run react',
         desc: 'Start the Frontend React app in the background',
         exec: async () => {
