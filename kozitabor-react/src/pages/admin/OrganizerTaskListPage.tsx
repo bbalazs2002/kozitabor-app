@@ -5,7 +5,7 @@ import ListCard from '../../components/admin/ListCard';
 import { type OrganizerTask } from '../../types/database';
 import { useDb } from '../../context/admin/DbContext';
 import { adminApiRequest } from '../../utils/api';
-import { formatOffsetToTime, getDayDate, groupByDay } from '../../utils/dateHelpers';
+import { formatOffsetToTime, groupByDay } from '../../utils/dateHelpers';
 import { useToast } from '../../context/admin/ToastContext';
 
 const OrganizerTaskListPage: React.FC = () => {
