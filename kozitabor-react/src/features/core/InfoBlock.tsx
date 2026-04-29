@@ -34,13 +34,12 @@ const InfoBlock: React.FC = () =>  {
 
         fetchLatest();
     }, [context]);
-    if (localLoading) return <div>Betöltés...</div>;
-    
     // Component
     return (
         <InfoCard
             title="Fontos Infók"
             icon={Info}
+            loading={localLoading}
             buttonText={ isHomePage ? 'További infók' : undefined }
             buttonTo="/info"
         >

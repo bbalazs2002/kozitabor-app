@@ -1,0 +1,495 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "default": "admin"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Contact": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ordering": {
+          "type": "integer",
+          "default": 0
+        },
+        "role": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Role"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Leader"
+          }
+        },
+        "organizerTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrganizerTask"
+          }
+        }
+      }
+    },
+    "Role": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Contact"
+          }
+        }
+      }
+    },
+    "Bring": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "Program": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startDay": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endDay": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startTimeOffset": {
+          "type": "integer"
+        },
+        "endTimeOffset": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "desc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Info": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "title": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Map"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Media"
+          }
+        }
+      }
+    },
+    "Media": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "url": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "IMAGE",
+            "FILE"
+          ]
+        },
+        "info": {
+          "$ref": "#/definitions/Info"
+        }
+      }
+    },
+    "Map": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "title": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "integer",
+          "default": 15
+        },
+        "info": {
+          "$ref": "#/definitions/Info"
+        }
+      }
+    },
+    "Team": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string"
+        },
+        "camperTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CamperTask"
+          }
+        },
+        "leaders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Leader"
+          }
+        },
+        "campers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Camper"
+          }
+        }
+      }
+    },
+    "Camper": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "team": {
+          "$ref": "#/definitions/Team"
+        }
+      }
+    },
+    "CamperActivity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "title": {
+          "type": "string"
+        },
+        "camperTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CamperTask"
+          }
+        }
+      }
+    },
+    "CamperTask": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "day": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timeOffset": {
+          "type": "integer"
+        },
+        "team": {
+          "$ref": "#/definitions/Team"
+        },
+        "camperActivity": {
+          "$ref": "#/definitions/CamperActivity"
+        }
+      }
+    },
+    "OrganizerActivity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "title": {
+          "type": "string"
+        },
+        "organizerTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrganizerTask"
+          }
+        }
+      }
+    },
+    "OrganizerTask": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "day": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timeOffset": {
+          "type": "integer"
+        },
+        "contact": {
+          "$ref": "#/definitions/Contact"
+        },
+        "organizerActivity": {
+          "$ref": "#/definitions/OrganizerActivity"
+        }
+      }
+    },
+    "Deadline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Setting": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "str_id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "default": ""
+        },
+        "comment": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "Leader": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "contact": {
+          "$ref": "#/definitions/Contact"
+        },
+        "team": {
+          "$ref": "#/definitions/Team"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "user": {
+      "$ref": "#/definitions/User"
+    },
+    "contact": {
+      "$ref": "#/definitions/Contact"
+    },
+    "role": {
+      "$ref": "#/definitions/Role"
+    },
+    "bring": {
+      "$ref": "#/definitions/Bring"
+    },
+    "program": {
+      "$ref": "#/definitions/Program"
+    },
+    "info": {
+      "$ref": "#/definitions/Info"
+    },
+    "media": {
+      "$ref": "#/definitions/Media"
+    },
+    "map": {
+      "$ref": "#/definitions/Map"
+    },
+    "team": {
+      "$ref": "#/definitions/Team"
+    },
+    "camper": {
+      "$ref": "#/definitions/Camper"
+    },
+    "camperActivity": {
+      "$ref": "#/definitions/CamperActivity"
+    },
+    "camperTask": {
+      "$ref": "#/definitions/CamperTask"
+    },
+    "organizerActivity": {
+      "$ref": "#/definitions/OrganizerActivity"
+    },
+    "organizerTask": {
+      "$ref": "#/definitions/OrganizerTask"
+    },
+    "deadline": {
+      "$ref": "#/definitions/Deadline"
+    },
+    "setting": {
+      "$ref": "#/definitions/Setting"
+    },
+    "leader": {
+      "$ref": "#/definitions/Leader"
+    }
+  }
+}

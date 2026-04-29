@@ -9,16 +9,20 @@ interface InfoCardProps {
   buttonText?: string;
   buttonColor?: string;
   buttonTo?: string;
+  loading?: boolean;
   children: React.ReactNode;
 }
 
-export const InfoCard: React.FC<InfoCardProps> = ({ 
-  title, 
-  icon: Icon, 
-  buttonText, 
-  buttonColor, 
-  buttonTo, 
-  children 
+const SKELETON_WIDTHS = ['80%', '60%', '72%', '50%'];
+
+export const InfoCard: React.FC<InfoCardProps> = ({
+  title,
+  icon: Icon,
+  buttonText,
+  buttonColor,
+  buttonTo,
+  loading,
+  children
 }) => {
   const { colors } = useTheme();
 
@@ -51,7 +55,17 @@ export const InfoCard: React.FC<InfoCardProps> = ({
       
       {/* CONTENT AREA */}
       <div className="space-y-0">
-        {children}
+        {loading ? (
+          <div className="space-y-3 py-1 animate-pulse">
+            {SKELETON_WIDTHS.map((w, i) => (
+              <div
+                key={i}
+                className="h-3 rounded-full"
+                style={{ width: w, backgroundColor: `${colors.border}70` }}
+              />
+            ))}
+          </div>
+        ) : children}
       </div>
 
       {/* OPTIONAL ACTION BUTTON */}

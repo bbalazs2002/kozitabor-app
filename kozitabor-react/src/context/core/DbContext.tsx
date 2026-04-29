@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, type ReactNode, useCallback } from 'react';
-import { type Bring, type Contact, type Info, type LivePrograms, type Program, type Team } from '../../types/database';
+import { type Bring, type CamperTask, type Contact, type Deadline, type Info, type LivePrograms, type Program, type Setting, type Team } from '../../types/database';
 import { coreApiRequest } from '../../utils/api';
+import { dayOffsetToUtcTs } from '../../utils/dateHelpers';
 
 const CACHE_TIME = 60000; // 1 perc
 
@@ -20,6 +21,11 @@ interface DbContextType {
   getProgram: (id: number) => Promise<Program>;
   getLivePrograms: () => Promise<LivePrograms>;
   getUpcomingPrograms: (count: number) => Promise<Program[]>;
+  getCamperTasks: () => Promise<CamperTask[]>;
+  getTodayCamperTasks: () => Promise<CamperTask[]>;
+  getSettings: () => Promise<Setting[]>;
+  getSettingByStrId: (strId: string) => Promise<Setting | undefined>;
+  getDeadlines: () => Promise<Deadline[]>;
 }
 
 const DbContext = createContext<DbContextType | undefined>(undefined);
@@ -63,6 +69,9 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
   const bring = useReadCache<Bring>('bring', '/bring');
   const teams = useReadCache<Team>('teams', '/team');
   const programs = useReadCache<Program>('programs', '/program');
+  const camperTasks = useReadCache<CamperTask>('camperTasks', '/task');
+  const settings = useReadCache<Setting>('settings', '/setting');
+  const deadlines = useReadCache<Deadline>('deadlines', '/deadline');
 
   // --- EGYEDI KLIENS LOGIKÁK ---
 
@@ -75,23 +84,17 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getTodayCamperTasks = async (): Promise<CamperTask[]> => {
+    const all = await camperTasks.getAll();
+    const todayUTC = new Date().toISOString().split('T')[0];
+    return all.filter(task => new Date(task.day).toISOString().split('T')[0] === todayUTC);
+  };
+
   const getUpcomingPrograms = async (count: number = 3): Promise<Program[]> => {
     const allPrograms = await programs.getAll();
-    const now = new Date();
-    
-    // Időbélyegek kiszámítása az összehasonlításhoz
-    const todayNoonUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0, 0);
-    const currentUTCOffset = (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds();
-
+    const nowTs = Date.now();
     return allPrograms
-      .filter(program => {
-        const pDate = new Date(program.endDay);
-        const programDateUTC = Date.UTC(pDate.getUTCFullYear(), pDate.getUTCMonth(), pDate.getUTCDate(), 12, 0, 0, 0);
-
-        if (programDateUTC > todayNoonUTC) return true;
-        if (programDateUTC === todayNoonUTC) return program.endTimeOffset > currentUTCOffset;
-        return false;
-      })
+      .filter(p => dayOffsetToUtcTs(p.endDay, p.endTimeOffset) > nowTs)
       .slice(0, count);
   };
 
@@ -103,7 +106,15 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
       getTeams: teams.getAll, getTeam: teams.getById,
       getPrograms: programs.getAll, getNPrograms: programs.getN, getProgram: programs.getById,
       getLivePrograms,
-      getUpcomingPrograms
+      getUpcomingPrograms,
+      getCamperTasks: camperTasks.getAll,
+      getTodayCamperTasks,
+      getSettings: settings.getAll,
+      getSettingByStrId: async (strId: string) => {
+        const all = await settings.getAll();
+        return all.find(s => s.str_id === strId);
+      },
+      getDeadlines: deadlines.getAll,
     }}>
       {children}
     </DbContext.Provider>

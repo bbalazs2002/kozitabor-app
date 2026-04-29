@@ -9,6 +9,7 @@ interface CardItemProps {
   onClick?: () => void;
   children?: React.ReactNode;
   className?: string;
+  rightSlot?: React.ReactNode;
 }
 
 export const CardItem: React.FC<CardItemProps> = ({
@@ -17,6 +18,7 @@ export const CardItem: React.FC<CardItemProps> = ({
   onClick,
   children,
   className = '',
+  rightSlot,
 }) => {
   const navigate = useNavigate();
   const { colors } = useTheme();
@@ -84,7 +86,6 @@ export const CardItem: React.FC<CardItemProps> = ({
       {/* CONTENT */}
       <div className="flex-1 flex items-center justify-between gap-4">
 
-        {/* RIGHT SIDE (CUSTOM CHILDREN + CHEVRON) */}
         <div className="flex items-center gap-3">
           {React.Children.map(children, (child, index) => (
             <div
@@ -103,6 +104,8 @@ export const CardItem: React.FC<CardItemProps> = ({
             />
           )}
         </div>
+
+        {rightSlot && <div className="shrink-0">{rightSlot}</div>}
       </div>
     </div>
   );

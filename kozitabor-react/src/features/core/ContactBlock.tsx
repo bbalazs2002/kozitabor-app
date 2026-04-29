@@ -1,24 +1,22 @@
-import { useLocation } from "react-router-dom";
-import { InfoCard } from "../../components/core/InfoCard"
-import { Contact2Icon, Phone } from 'lucide-react';
-import { useDb } from "../../context/core/DbContext";
-import { type Contact } from "../../types/database"
 import { useEffect, useState } from "react";
-import { CardItem } from "../../components/core/CardItem";
+import { useLocation } from "react-router-dom";
+import { Contact2Icon, Phone } from 'lucide-react';
+import { InfoCard } from "../../components/core/InfoCard";
+import { AccordionItem } from "../../components/core/AccordionItem";
+import { useDb } from "../../context/core/DbContext";
 import { useTheme } from "../../context/core/ThemeContext";
+import type { Contact } from "../../types/database";
 
-const ContactBlock: React.FC = () =>  {
-    // style
-    const {colors} = useTheme();
+const ContactBlock: React.FC = () => {
+    const { colors } = useTheme();
 
-    // Router path
     const location = useLocation();
     const isHomePage = location.pathname === "/";
 
-    // DB
     const context = useDb();
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [localLoading, setLocalLoading] = useState(true);
+
     useEffect(() => {
         const fetchLatest = async () => {
             try {
@@ -33,30 +31,51 @@ const ContactBlock: React.FC = () =>  {
 
         fetchLatest();
     }, [context]);
-    if (localLoading) return <div>Betöltés...</div>;
-    
-    // Component
+
     return (
         <InfoCard
-            title="Kapcsolatok"
+            title="Elérhetőségek"
             icon={Contact2Icon}
-            buttonText={isHomePage ? 'További kapcsolatok' : undefined}
+            loading={localLoading}
+            buttonText={isHomePage ? 'További elérhetőségek' : undefined}
             buttonTo="/contacts"
         >
-        <div className="flex flex-col divide-y divide-gray-300 dark:divide-gray-700">
-            {contacts.map((contact) => (
-            <CardItem
-                key={contact.id}
-                to={contact.tel ? `tel:${contact.tel}` : undefined}
-                icon={<Phone color={colors.icon} />}
-                className="px-2"
-            >
-                <span>{contact.name}</span>
-                <span>{contact.tel}</span>
-            </CardItem>
-            ))}
-        </div>
+            {contacts.length === 0 ? (
+                <p className="text-sm py-2" style={{ color: colors.text2 }}>
+                    Nincs megjeleníthető kapcsolat.
+                </p>
+            ) : (
+                contacts.map(contact => (
+                    <AccordionItem
+                        key={contact.id}
+                        label={
+                            <span className="flex items-center gap-2">
+                                <span>{contact.name}</span>
+                                {contact.role && (
+                                    <span className="text-xs font-normal" style={{ color: colors.icon }}>
+                                        {contact.role.name}
+                                    </span>
+                                )}
+                            </span>
+                        }
+                    >
+                        {contact.tel ? (
+                            <div className="flex items-center gap-2">
+                                <Phone size={14} className="shrink-0" style={{ color: colors.icon }} />
+                                <span className="text-sm flex-1" style={{ color: colors.text2 }}>
+                                    {contact.tel}
+                                </span>
+                            </div>
+                        ) : (
+                            <p className="text-sm" style={{ color: colors.text2, opacity: 0.6 }}>
+                                Nincs telefonszám megadva.
+                            </p>
+                        )}
+                    </AccordionItem>
+                ))
+            )}
         </InfoCard>
-    )};
+    );
+};
 
 export default ContactBlock;

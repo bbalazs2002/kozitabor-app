@@ -17,9 +17,11 @@ const LIGHT_PALETTE = {
     to: '#f4e4bc'
   },
   navBtnGradients: [
-    { from: '#4a1110', to: '#a52a2a' },
-    { from: '#0d1a35', to: '#203abf' },
-    { from: '#1a2e12', to: '#3e5c2e' }
+    { from: '#00428a', to: '#0085c7' },
+    { from: '#1a1a1a', to: '#444444' },
+    { from: '#9a0030', to: '#df0024' },
+    { from: '#b07200', to: '#f4c300' },
+    { from: '#005c2e', to: '#009f3d' }
   ]
 };
 

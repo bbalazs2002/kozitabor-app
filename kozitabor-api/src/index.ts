@@ -1,10 +1,14 @@
 import 'dotenv/config';
 import express from "express";
 import cors from "cors";
+import path from "path";
 import coreRoutes from './routes/core.js';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
 import { prisma } from './lib/prisma';
+import { apiReference } from '@scalar/express-api-reference';
+import expressListEndpoints from 'express-list-endpoints';
+import { setupApiDocs } from './utils/apiDocs.js';
 
 // .env check
 if (!process.env.CLIENT_URL || !process.env.CLIENT_PORT) {
@@ -15,7 +19,8 @@ if (!process.env.API_PORT) {
 }
 
 // Create app
-const origin = `${process.env.CLIENT_URL}:${process.env.CLIENT_PORT}`
+const isDev = process.env.IS_DEV === 'true';
+const origin = isDev ? true : `${process.env.CLIENT_URL}:${process.env.CLIENT_PORT}`;
 const app = express();
 app.use(cors({
   origin: origin,
@@ -25,11 +30,21 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.resolve('uploads')));
 
 // Configure routes
 app.use('/api', coreRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+
+// OpenAPI + Scalar
+if (process.env.IS_DEV) {
+  setupApiDocs(app, [
+    { prefix: '/api', router: coreRoutes },
+    { prefix: '/api/admin', router: adminRoutes },
+    { prefix: '/api/auth', router: authRoutes }
+  ]);
+}
 
 // Run server and open port 5000
 const PORT = process.env.API_PORT;

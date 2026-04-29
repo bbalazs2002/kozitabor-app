@@ -80,7 +80,7 @@ export const ActivityFormPage = () => {
     const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async () => {
 
         const method = isEdit ? 'PUT' : 'POST';
-        const url = isEdit ? `/activity/${id}` : '/activity';
+        const url = isEdit ? `/camper-activity/${id}` : '/camper-activity';
 
         try {
             const response = await adminApiRequest(url, {

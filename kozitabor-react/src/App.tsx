@@ -16,6 +16,15 @@ import TaskListPage from './pages/admin/TaskListPage';
 import TaskFormPage from './pages/admin/TaskFormPage';
 import BringListPage from './pages/admin/BringListPage';
 import { BringFormPage } from './pages/admin/BringFormPage';
+import RoleListPage from './pages/admin/RoleListPage';
+import OrganizerActivityListPage from './pages/admin/OrganizerActivityListPage';
+import { OrganizerActivityFormPage } from './pages/admin/OrganizerActivityFormPage';
+import OrganizerTaskListPage from './pages/admin/OrganizerTaskListPage';
+import OrganizerTaskFormPage from './pages/admin/OrganizerTaskFormPage';
+import SettingsListPage from './pages/admin/SettingsListPage';
+import SettingsFormPage from './pages/admin/SettingsFormPage';
+import DeadlineListPage from './pages/admin/DeadlineListPage';
+import DeadlineFormPage from './pages/admin/DeadlineFormPage';
 import { CoreLayout } from './layouts/CoreLayout';
 import HomePage from './pages/core/HomePage';
 import ProgramPage from './pages/core/ProgramPage';
@@ -26,12 +35,14 @@ import ContactPage from './pages/core/ContactPage';
 import WhatToBringPage from './pages/core/WhatToBringPage';
 import CoreProviders from './providers/CoreProviders';
 import { ProgramDetailsPage } from './pages/core/ProgramDetailsPage';
+import CamperTaskPage from './pages/core/CamperTaskPage';
+import DeadlinePage from './pages/core/DeadlinePage';
+import GYIKPage from './pages/core/GYIKPage';
 import LoginPage from './pages/auth/Login';
 import AuthProviders from './providers/AuthProviders';
 import AuthLayout from './layouts/AuthLayout';
 import { AuthProvider } from './context/admin/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { TeamDetails } from './features/core/TeamDetails';
 
 function App() {
   return (
@@ -48,9 +59,11 @@ function App() {
               <Route path="info" element={<InfoPage />} />
               <Route path="info/:infoId" element={<InfoDetailsPage />} />
               <Route path="team" element={<TeamPage />} />
-              <Route path="team/:teamId" element={<TeamDetails />} />
               <Route path="contacts" element={<ContactPage />} />
               <Route path="whattobring" element={<WhatToBringPage />} />
+              <Route path="tasks" element={<CamperTaskPage />} />
+              <Route path="deadlines" element={<DeadlinePage />} />
+              <Route path="gyik" element={<GYIKPage />} />
             </Route>
           </Route>
 
@@ -68,9 +81,10 @@ function App() {
                 <Route path="teams" element={<TeamListPage />} />
                 <Route path="team/:id" element={<TeamFormPage />} />
 
-                {/* CONTACTS */}
+                {/* CONTACTS & ROLES */}
                 <Route path="contacts" element={<ContactListPage />} />
                 <Route path="contact/:id" element={<ContactFormPage />} />
+                <Route path="roles" element={<RoleListPage />} />
 
                 {/* INFO */}
                 <Route path="infos" element={<InfoListPage />} />
@@ -80,13 +94,27 @@ function App() {
                 <Route path="activities" element={<ActivityListPage />} />
                 <Route path="activity/:id" element={<ActivityFormPage />} />
 
-                {/* TASKS */}
+                {/* CAMPER TASKS */}
                 <Route path="tasks" element={<TaskListPage />} />
                 <Route path="task/new" element={<TaskFormPage />} />
+
+                {/* ORGANIZER ACTIVITIES & TASKS */}
+                <Route path="organizer-activities" element={<OrganizerActivityListPage />} />
+                <Route path="organizer-activity/:id" element={<OrganizerActivityFormPage />} />
+                <Route path="organizer-tasks" element={<OrganizerTaskListPage />} />
+                <Route path="organizer-task/new" element={<OrganizerTaskFormPage />} />
 
                 {/* BRING */}
                 <Route path="brings" element={<BringListPage />} />
                 <Route path="bring/new" element={<BringFormPage />} />
+
+                {/* SETTINGS */}
+                <Route path="settings" element={<SettingsListPage />} />
+                <Route path="setting/:id" element={<SettingsFormPage />} />
+
+                {/* DEADLINES */}
+                <Route path="deadlines" element={<DeadlineListPage />} />
+                <Route path="deadline/:id" element={<DeadlineFormPage />} />
               </Route>
             </Route>
           </Route>

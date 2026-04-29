@@ -14,6 +14,7 @@ export interface MapData {
 export interface ContactData {
     name: string;
     tel: string;
+    roleId?: number | null;
 }
 
 export interface TeamData {
@@ -33,6 +34,23 @@ export interface TaskData {
 
 export interface BringData {
     title: string;
+}
+
+export interface OrganizerTaskData {
+    day: Date;
+    timeOffset: number;
+    contactIds: number[];
+    activityIds: number[];
+}
+
+export interface DeadlineData {
+    label: string;
+    date: string;
+}
+
+export interface SettingData {
+    label: string;
+    value: string;
 }
 
 export interface ProgramData {

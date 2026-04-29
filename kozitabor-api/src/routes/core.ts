@@ -2,9 +2,9 @@ import { Router } from 'express';
 import * as coreCtrl from '../controllers/core.controller.js';
 import { idParamMiddleware } from '../middleware/param.middleware.js';
 import { ControllerFactory as CF } from '../utils/controllerFactory.js';
-import { 
-  infoService, contactService, teamService, 
-  bringService, taskService, programService 
+import {
+  infoService, contactService, teamService,
+  bringService, camperTaskService, programService, settingService, deadlineService
 } from '../services/core/index.js';
 
 const router = Router();
@@ -15,10 +15,10 @@ router.param('id', idParamMiddleware);
 
 // --- INFO & MAP ---
 router.get('/info',     catchAsync(CF.getAll(infoService, { select: { id: true, title: true, icon: true }, orderBy: { id: 'desc' } })));
-router.get('/info/:id', catchAsync(CF.getOne(infoService, { map: true })));
+router.get('/info/:id', catchAsync(CF.getOne(infoService, { map: true, media: true })));
 
 // --- CONTACTS ---
-router.get('/contact',  catchAsync(CF.getAll(contactService, { orderBy: { ordering: 'asc' } })));
+router.get('/contact',  catchAsync(CF.getAll(contactService, { orderBy: { ordering: 'asc' }, include: { role: true } })));
 
 // --- BRING ---
 router.get('/bring',    catchAsync(CF.getAll(bringService, { orderBy: { title: 'asc' } })));
@@ -41,10 +41,17 @@ router.get('/team/:id', catchAsync(CF.getOne(teamService, {
 })));
 
 // --- BEOSZTÁS (TASKS) ---
-router.get('/task',     catchAsync(CF.getAll(taskService, {
-  include: { team: true, activity: true },
+router.get('/task',     catchAsync(CF.getAll(camperTaskService, {
+  include: { team: true, camperActivity: true },
   orderBy: [{ day: 'asc' }, { timeOffset: 'asc' }]
 })));
+
+// --- SETTINGS (publikus) ---
+router.get('/setting',      catchAsync(CF.getAll(settingService, { orderBy: { label: 'asc' } })));
+router.get('/setting/:id',  catchAsync(CF.getOne(settingService)));
+
+// --- DEADLINES ---
+router.get('/deadline', catchAsync(CF.getAll(deadlineService, { orderBy: { date: 'asc' } })));
 
 // --- PROGRAMOK ---
 router.get('/program',      catchAsync(CF.getAll(programService, { orderBy: [{ startDay: 'asc' }, { startTimeOffset: 'asc' }] })));

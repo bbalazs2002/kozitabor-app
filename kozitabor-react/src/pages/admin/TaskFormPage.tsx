@@ -71,7 +71,7 @@ const TaskFormPage = () => {
     // Form submit handler
     const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async () => {
         const method = 'POST';
-        const url = '/task';
+        const url = '/camper-task';
 
         try {
             const response = await adminApiRequest(url, {
@@ -81,8 +81,7 @@ const TaskFormPage = () => {
                 })
             });
 
-            // success
-            context.addTasksToCache(response);
+            context.addTasksToCache(Array.isArray(response) ? response : [response]);
             navigate('/admin/tasks'); 
             
         } catch (error) {

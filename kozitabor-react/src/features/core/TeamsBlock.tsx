@@ -1,63 +1,94 @@
 import { useEffect, useState } from 'react';
 import { ContentCard } from '../../components/core/ContentCard';
+import { AccordionItem } from '../../components/core/AccordionItem';
 import { useDb } from '../../context/core/DbContext';
+import { useTheme } from '../../context/core/ThemeContext';
 import type { Team } from '../../types/database';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { ExternalLink, Phone } from 'lucide-react';
 
 export const TeamsBlock: React.FC = () => {
-    // navigation
-    const navigate = useNavigate();
-
-    // DB
     const context = useDb();
+    const { colors } = useTheme();
     const [teams, setTeams] = useState<Team[]>([]);
+    const [groupSheetUrl, setGroupSheetUrl] = useState<string>('');
     const [localLoading, setLocalLoading] = useState(true);
-    useEffect(() => {
-        const fetchLatest = async () => {
-            try {
-                const data = await context.getTeams();
-                setTeams(data);
-            } catch (err) {
-                console.error("Hiba az adatok lekérésekor:", err);
-            } finally {
-                setLocalLoading(false);
-            }
-        };
 
-        fetchLatest();
+    useEffect(() => {
+        Promise.all([
+            context.getTeams(),
+            context.getSettingByStrId('group_sheet_url'),
+        ]).then(([teamsData, setting]) => {
+            setTeams(teamsData);
+            setGroupSheetUrl(setting?.value ?? '');
+        }).catch(err => {
+            console.error('Hiba az adatok lekérésekor:', err);
+        }).finally(() => setLocalLoading(false));
     }, [context]);
-    if (localLoading || !teams) return <div>Betöltés...</div>;
+
+    if (localLoading) return <div>Betöltés...</div>;
+
+    const leaders = teams.flatMap(team =>
+        (team.leaders ?? []).map(l => ({ ...l.contact, teamName: team.name }))
+    );
 
     return (
-        <ContentCard title="Csapatok">
-            <div className="space-y-12">
-                <div className="group">
-                    {teams.map(team => (
-                     <div key={team.id}>
-                        {/* Csoportnév - Cinzel betűtípussal, nagy méretben */}
-                        <h2
-                            onClick={() => navigate(`/team/${team.id}`)}
-                            className="font-cinzel text-3xl md:text-4xl text-[#3e3028] mt-4
-                                        dark:text-[#c5a059]">
-                            {team.name}
-                        </h2>
-                        
-                        {/* Vezetők listája - Behúzva (padding-left) */}
-                        <ul
-                            className="pl-8 space-y-2 border-l-2 border-[#c5a059] ml-1">
-                            {team.leaders?.map(leader => (
-                                <li 
-                                    key={leader.contact.id}
-                                    className="text-xl text-[#3e3028] dark:text-[#eaddca]/80 flex items-center gap-2"
-                                >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#3e3028]/80 dark:bg-[#c5a059]" />
-                                    <NavLink to="/contacts">{leader.contact.name}</NavLink>
-                                </li>
+        <ContentCard title="Csoportok">
+            <div className="space-y-6">
+
+                {/* Csoportbeosztás link */}
+                {groupSheetUrl ? (
+                    <a
+                        href={groupSheetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-80"
+                        style={{
+                            background: `linear-gradient(to right, ${colors.cardBgGradient.to}, ${colors.cardBgGradient.from})`,
+                            border: `1px solid ${colors.border}`,
+                            color: colors.text2,
+                        }}
+                    >
+                        <ExternalLink size={16} style={{ color: colors.icon }} className="shrink-0" />
+                        Csoportbeosztás megtekintése
+                    </a>
+                ) : (
+                    <p className="text-sm italic px-1" style={{ color: `${colors.text2}80` }}>
+                        A csoportbeosztás hamarosan elérhető lesz.
+                    </p>
+                )}
+
+                {/* Csapatvezetők */}
+                {leaders.length > 0 && (
+                    <div>
+                        <p
+                            className="text-xs uppercase tracking-widest px-1 mb-1"
+                            style={{ color: `${colors.text2}80` }}
+                        >
+                            Csoportvezetők
+                        </p>
+                        <div>
+                            {leaders.map(leader => (
+                                <AccordionItem key={leader.id} label={leader.name}>
+                                    {leader.tel ? (
+                                        <div className="flex items-center gap-2 py-1">
+                                            <Phone size={14} style={{ color: colors.icon }} className="shrink-0" />
+                                            <span
+                                                className="text-sm flex-1"
+                                                style={{ color: colors.text2 }}
+                                            >
+                                                {leader.tel}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-sm italic" style={{ color: `${colors.text2}60` }}>
+                                            Nincs telefonszám megadva.
+                                        </span>
+                                    )}
+                                </AccordionItem>
                             ))}
-                        </ul>
-                     </div>   
-                    ))}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </ContentCard>
     );

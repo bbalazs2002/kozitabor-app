@@ -36,7 +36,7 @@ const TaskListPage: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await adminApiRequest(`/task/${id}`, { method: 'DELETE' });
+      await adminApiRequest(`/camper-task/${id}`, { method: 'DELETE' });
       context.removeTaskFromCache(id);
       showToast("Sikeresen törölve.");
     } catch (err) {
@@ -81,7 +81,7 @@ const TaskListPage: React.FC = () => {
                   key={task.id}
                   id={task.id}
                   icon={<MenuSquare size="24" />}
-                  title={`${formatOffsetToTime(task.timeOffset)} - ${task.activity.title}`}
+                  title={`${formatOffsetToTime(task.timeOffset)} - ${task.camperActivity.title}`}
                   info={`Csapat: ${task.team.name}`}
                   deleteAction={() => handleDelete(task.id)}
                 />

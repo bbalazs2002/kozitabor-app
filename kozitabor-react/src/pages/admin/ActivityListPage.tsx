@@ -66,7 +66,7 @@ const ActivityListPage = () => {
                 editAction={() => navigate(`/admin/activity/${item.id}`)}
                 deleteAction={async () => {
                     try {
-                        const resp = await adminApiRequest(`/activity/${item.id}`, {
+                        const resp = await adminApiRequest(`/camper-activity/${item.id}`, {
                             method: 'DELETE'
                         });
 

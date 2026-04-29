@@ -11,11 +11,12 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
   // 1. Token kiolvasása a localStorage-ból
   const token = localStorage.getItem('kozitabor_token');
   
+  const isFormData = options.body instanceof FormData;
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      // 2. Ha van token, csatoljuk Bearer-ként
+      ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -50,4 +51,10 @@ export const coreApiRequest = async (endpoint: string, options: RequestInit = {}
 
 export const authApiRequest = async (endpoint: string, options: RequestInit = {}) => {
   return apiRequest(`/auth${endpoint}`, options);
+};
+
+export const getMediaUrl = (filePath: string): string => {
+  const base = import.meta.env.VITE_API_BASE_URL as string;
+  const host = base.replace(/\/api$/, '');
+  return `${host}/${filePath}`;
 };

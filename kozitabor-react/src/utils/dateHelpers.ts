@@ -1,8 +1,26 @@
-/** ISO dátumból (day) és másodpercből (offset) csinál szép HH:mm-t */
+/** UTC másodperc-offsetből csinál szép HH:mm-t (UTC megjelenítés, timezone-tudatosság nélkül) */
 export const formatOffsetToTime = (offset: number): string => {
   const hours = Math.floor(offset / 3600);
   const minutes = Math.floor((offset % 3600) / 60);
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+/**
+ * Napból (UTC dél, pl. "2025-07-14T12:00:00Z") + UTC midnight-től mért másodperc-offsetből
+ * kiszámolja a pontos UTC timestamp-et (ms). Pl. offset=32400 → adott nap 09:00 UTC.
+ */
+export const dayOffsetToUtcTs = (day: string | Date, offsetSeconds: number): number => {
+  const d = new Date(day);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + offsetSeconds * 1000;
+};
+
+/**
+ * UTC dél-ként tárolt napból + UTC midnight-től mért másodperc-offsetből HELYI időt jelenít meg (HH:mm).
+ * Pl. nap="2025-07-14T12:00:00Z", offset=32400 (9:00 UTC) → "11:00" UTC+2 esetén.
+ */
+export const formatUtcOffsetToLocalTime = (utcDay: string | Date, offsetSeconds: number): string => {
+  const localDate = new Date(dayOffsetToUtcTs(utcDay, offsetSeconds));
+  return `${localDate.getHours().toString().padStart(2, '0')}:${localDate.getMinutes().toString().padStart(2, '0')}`;
 };
 
 /** Visszaadja a nap nevét (pl. "Hétfő") egy ISO stringből */

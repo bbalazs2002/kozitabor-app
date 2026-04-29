@@ -1,10 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
+}
+generator jsonSchema {
+  provider = "prisma-json-schema-generator"
+  output   = "./"
 }
 
 datasource db {
@@ -13,23 +12,35 @@ datasource db {
 
 // Auth tables
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String    // Ezt mi adjuk hozzá a kézi adminhoz
-  role          String    @default("admin")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// 1. Kapcsolattartók (Vezetők)
+// 1. Kapcsolattartók (Vezetők / Szervezők)
 model Contact {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  name      String
-  tel       String?
-  ordering  Int      @default(0) // Listázási sorrendhez
-  leaders   Leader[]
+  id                Int                 @id @default(autoincrement())
+  createdAt         DateTime            @default(now())
+  name              String
+  tel               String?
+  ordering          Int                 @default(0)
+  
+  // Kapcsolatok
+  roleId            Int?
+  role              Role?               @relation(fields: [roleId], references: [id])
+  leaders           Leader[]
+  organizerTasks    OrganizerTask[]
+}
+
+// ÚJ: Szerepkörök tábla
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  contacts  Contact[]
 }
 
 // 2. Mit hozz magaddal lista
@@ -41,29 +52,39 @@ model Bring {
 
 // 3. Napi programbontás
 model Program {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  
-  // Natív PostgreSQL timestamp (mindig déli 12:00)
-  startDay       DateTime
-  endDay         DateTime
-  
-  // Másodperc éjféltől
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  startDay        DateTime
+  endDay          DateTime
   startTimeOffset Int
   endTimeOffset   Int
-
-  title     String
-  desc      String?
+  title           String
+  desc            String?
 }
 
-// 4. Információs kártyák (Aloldalak)
+// 4. Információs kártyák
 model Info {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   title     String
   icon      String
   content   String   @db.Text
-  map       Map?     // Itt már nincs @relation, csak a típus
+  map       Map?
+  
+  media     Media[]
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  url       String
+  type      MediaType // ENUM vagy String (IMAGE / FILE)
+  infoId    Int
+  info      Info     @relation(fields: [infoId], references: [id], onDelete: Cascade)
+}
+
+enum MediaType {
+  IMAGE
+  FILE
 }
 
 // 5. Térkép koordináták
@@ -74,59 +95,92 @@ model Map {
   lat       Float
   lng       Float
   zoom      Int      @default(15)
-  
-  // A külső kulcs ide kerül:
   infoId    Int      @unique
   info      Info     @relation(fields: [infoId], references: [id], onDelete: Cascade)
 }
 
 // 6. Csapatok
 model Team {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  name        String
+  camperTasks CamperTask[] // Átnevezve
+  leaders     Leader[]
+  campers     Camper[]     // ÚJ: Résztvevők
+}
+
+// ÚJ: Résztvevők (Campers)
+model Camper {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   name      String
-  tasks     Task[]
-  leaders   Leader[]
+  email     String?  @unique
+  teamId    Int
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
-// 7. Tevékenység típusok (pl. Sport, Kézműves)
-model Activity {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  title     String
-  tasks     Task[]
+// 7. Tevékenység típusok (Átnevezve camper_activity-re)
+model CamperActivity {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  title       String
+  camperTasks CamperTask[]
 }
 
-// 8. Feladatok/Beosztás (Csapat + Tevékenység + Időpont)
-model Task {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  
-  // A nap 12:00-s (déli) timestamp-je
-  day        DateTime 
-  
-  // A nap eleje óta eltelt másodpercek
-  timeOffset Int      
+// 8. Feladatok/Beosztás (Átnevezve camper_task-ra)
+model CamperTask {
+  id              Int            @id @default(autoincrement())
+  createdAt       DateTime       @default(now())
+  day             DateTime 
+  timeOffset      Int      
+  teamId          Int
+  team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  camperActivityId Int
+  camperActivity  CamperActivity @relation(fields: [camperActivityId], references: [id], onDelete: Cascade)
+}
 
-  teamId     Int
-  // A Team törlésekor törlődik a bejegyzés
-  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
-  activityId Int
-  // Az Activity törlésekor törlődik a bejegyzés
-  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+// ÚJ: Szervezői tevékenységek
+model OrganizerActivity {
+  id             Int             @id @default(autoincrement())
+  createdAt      DateTime        @default(now())
+  title          String
+  organizerTasks OrganizerTask[]
+}
+
+// ÚJ: Szervezői feladatok (Contact + Activity + Időpont)
+model OrganizerTask {
+  id                  Int               @id @default(autoincrement())
+  createdAt           DateTime          @default(now())
+  day                 DateTime
+  timeOffset          Int
+  contactId           Int
+  contact             Contact           @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  organizerActivityId Int
+  organizerActivity   OrganizerActivity @relation(fields: [organizerActivityId], references: [id], onDelete: Cascade)
+}
+
+// 11. Fontos határidők
+model Deadline {
+  id    Int      @id @default(autoincrement())
+  label String
+  date  DateTime
+}
+
+// 10. Globális beállítások
+model Setting {
+  id      Int    @id @default(autoincrement())
+  str_id  String @unique
+  label   String
+  value   String @default("")
+  comment String @default("")
 }
 
 // 9. Vezetők rendelése csapatokhoz
 model Leader {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  
   contactId Int
-  // Ha a Contact-ot töröljük, a kapcsolótábla bejegyzése is törlődik:
   contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-
   teamId    Int
-  // Ha a Team-et töröljük, akkor is törlődjön a kapcsolat:
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }

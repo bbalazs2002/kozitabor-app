@@ -3,7 +3,7 @@ import { useDb } from '../../context/core/DbContext';
 import { type Program } from '../../types/database';
 import { useParams } from 'react-router-dom';
 import { ContentCard } from '../../components/core/ContentCard';
-import { formatOffsetToTime, getDayDate } from '../../utils/dateHelpers';
+import { formatUtcOffsetToLocalTime, getDayDate } from '../../utils/dateHelpers';
 
 export const ProgramDetails: React.FC = () => {
     const { progId } = useParams();
@@ -33,11 +33,11 @@ export const ProgramDetails: React.FC = () => {
             {/* TIME */}
             <p className='text-[#3e3028] dark:text-[#c5a059]'>
                 <span className="text-lg font-bold">Kezdés: </span>
-                {`${getDayDate(prog.startDay)} ${formatOffsetToTime(prog.startTimeOffset)}`}
+                {`${getDayDate(prog.startDay)} ${formatUtcOffsetToLocalTime(prog.startDay, prog.startTimeOffset)}`}
             </p>
             <p className='text-[#3e3028] dark:text-[#c5a059] mb-5'>
                 <span className="text-lg font-bold">Befejezés: </span>
-                {`${getDayDate(prog.endDay)} ${formatOffsetToTime(prog.endTimeOffset)}`}
+                {`${getDayDate(prog.endDay)} ${formatUtcOffsetToLocalTime(prog.endDay, prog.endTimeOffset)}`}
             </p>
 
             {/* CONTENT */}

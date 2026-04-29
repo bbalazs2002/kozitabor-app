@@ -8,20 +8,17 @@ export const getLivePrograms = async (_req: Request, res: Response) => {
   // Lekérünk egy tágabb intervallumot (tegnapelőttől holnapig)
   const potentialPrograms = await prisma.program.findMany({
     where: {
-      startDay: {
-        gte: new Date(nowTs - 2 * 24 * 60 * 60 * 1000),
-        lte: new Date(nowTs + 24 * 60 * 60 * 1000)
-      }
+      AND: [
+        { startDay: { lte: new Date(nowTs + 24 * 60 * 60 * 1000) } },
+        { endDay: { gte: new Date(nowTs - 2 * 24 * 60 * 60 * 1000) } },
+      ]
     }
   });
 
   const getTs = (p: any, type: 'start' | 'end') => {
-    const d = new Date(p.startDay);
+    const d = new Date(type === 'start' ? p.startDay : p.endDay);
     const midnight = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-    if (type === 'start') return midnight + (p.startTimeOffset * 1000);
-    
-    const isNextDay = p.endTimeOffset < p.startTimeOffset;
-    return midnight + (p.endTimeOffset * 1000) + (isNextDay ? 86400000 : 0);
+    return midnight + ((type === 'start' ? p.startTimeOffset : p.endTimeOffset) * 1000);
   };
 
   const current = potentialPrograms.find(p => nowTs >= getTs(p, 'start') && nowTs <= getTs(p, 'end')) || null;

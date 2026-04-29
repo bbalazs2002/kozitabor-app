@@ -1,11 +1,15 @@
 import { createContext, useContext, useState, type ReactNode, useCallback} from 'react';
-import { type Activity, type Bring, type Contact, type DashboardSummary, type Info, type Program, type Task, type Team } from '../../types/database';
+import { type Activity, type Bring, type CamperTask, type Contact, type Deadline, type DashboardSummary, type Info, type OrganizerActivity, type OrganizerTask, type Program, type Role, type Setting, type Team } from '../../types/database';
 import { adminApiRequest } from '../../utils/api';
 import { normalizeToUtcNoon } from '../../utils/dateHelpers';
 
 const CACHE_TIME = 60000; // 1 perc
 
 interface DbContextType {
+  // Roles
+  getRoles: () => Promise<Role[]>;
+  addRoleToCache: (role: Role) => void;
+  removeRoleFromCache: (id: number) => void;
   // Info
   getInfos: () => Promise<Info[]>;
   getInfo: (id: number) => Promise<Info>;
@@ -25,17 +29,26 @@ interface DbContextType {
   addTeamToCache: (newTeam: Team) => void;
   updateTeamInCache: (updatedTeam: Team) => void;
   removeTeamFromCache: (id: number) => void;
-  // Activities
+  // Camper Activities
   getActivities: () => Promise<Activity[]>;
   getActivity: (id: number) => Promise<Activity>;
-  addActivityToCache: (newActivity: Activity) => void;
-  updateActivityInCache: (updatedActivity: Activity) => void;
+  addActivityToCache: (a: Activity) => void;
+  updateActivityInCache: (a: Activity) => void;
   removeActivityFromCache: (id: number) => void;
-  // Tasks
-  getTasks: () => Promise<Task[]>;
-  addTaskToCache: (newTask: any) => void;
-  addTasksToCache: (newTasks: any[]) => void;
+  // Camper Tasks
+  getTasks: () => Promise<CamperTask[]>;
+  addTasksToCache: (tasks: CamperTask[]) => void;
   removeTaskFromCache: (id: number) => void;
+  // Organizer Activities
+  getOrganizerActivities: () => Promise<OrganizerActivity[]>;
+  getOrganizerActivity: (id: number) => Promise<OrganizerActivity>;
+  addOrganizerActivityToCache: (a: OrganizerActivity) => void;
+  updateOrganizerActivityInCache: (a: OrganizerActivity) => void;
+  removeOrganizerActivityFromCache: (id: number) => void;
+  // Organizer Tasks
+  getOrganizerTasks: () => Promise<OrganizerTask[]>;
+  addOrganizerTasksToCache: (tasks: OrganizerTask[]) => void;
+  removeOrganizerTaskFromCache: (id: number) => void;
   // Brings
   getBrings: () => Promise<Bring[]>;
   addBringToCache: (newBring: Bring) => void;
@@ -46,6 +59,18 @@ interface DbContextType {
   addProgramToCache: (newProg: any) => void;
   updateProgramInCache: (updatedProg: any) => void;
   removeProgramFromCache: (id: number) => void;
+  // Settings
+  getSettings: () => Promise<Setting[]>;
+  getSetting: (id: number) => Promise<Setting>;
+  addSettingToCache: (s: Setting) => void;
+  updateSettingInCache: (s: Setting) => void;
+  removeSettingFromCache: (id: number) => void;
+  // Deadlines
+  getDeadlines: () => Promise<Deadline[]>;
+  getDeadline: (id: number) => Promise<Deadline>;
+  addDeadlineToCache: (d: Deadline) => void;
+  updateDeadlineInCache: (d: Deadline) => void;
+  removeDeadlineFromCache: (id: number) => void;
   // Dashboard
   getDashboardData: () => Promise<DashboardSummary>;
   //
@@ -56,7 +81,6 @@ const DbContext = createContext<DbContextType | undefined>(undefined);
 
 export const DbProvider = ({ children }: { children: ReactNode }) => {
   const [lastFetched, setLastFetched] = useState<Record<string, number | null>>({});
-  // Dashboard külön state, mert nem illik a generikus T[] mintába
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
 
   // --- GENERIKUS CACHE ENGINE ---
@@ -81,7 +105,6 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
         return sorted;
       } catch (err) {
         console.error(`[${entityKey}] Refresh failed:`, err);
-        // Hiba esetén is frissítjük az időt, hogy ne hívogassa percenként újra, ha halott a szerver
         setLastFetched(prev => ({ ...prev, [entityKey]: Date.now() }));
         return [];
       }
@@ -93,26 +116,34 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     const updateCache = (action: (prev: T[]) => T[]) => {
       setData(prev => sortFn(action(prev)));
       setLastFetched(prev => ({ ...prev, [entityKey]: Date.now() }));
-      // Background sync nélkül is működik az optimista UI, 
-      // de a refresh() biztosítja, hogy a szerver szerinti állapot legyen végül.
-      refresh(); 
+      refresh();
     };
 
     return { data, getAll, getOne, updateCache, setData };
   };
 
   // --- ENTITÁSOK ---
+  const roles = useEntityCache<Role>('roles', '/role', d => [...d].sort((a, b) => a.name.localeCompare(b.name)));
   const infos = useEntityCache<Info>('infos', '/info');
   const contacts = useEntityCache<Contact>('contacts', '/contact', d => [...d].sort((a, b) => a.ordering - b.ordering));
   const teams = useEntityCache<Team>('teams', '/team');
-  const activities = useEntityCache<Activity>('activities', '/activity', d => [...d].sort((a, b) => a.title.localeCompare(b.title)));
+  const activities = useEntityCache<Activity>('activities', '/camper-activity', d => [...d].sort((a, b) => a.title.localeCompare(b.title)));
   const brings = useEntityCache<Bring>('brings', '/bring', d => [...d].sort((a, b) => a.title.localeCompare(b.title)));
-  
-  const taskSort = (list: Task[]) => [...list].sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime() || a.timeOffset - b.timeOffset);
-  const tasks = useEntityCache<Task>('tasks', '/task', taskSort);
+  const organizerActivities = useEntityCache<OrganizerActivity>('organizerActivities', '/organizer-activity', d => [...d].sort((a, b) => a.title.localeCompare(b.title)));
 
-  const progSort = (list: Program[]) => [...list].sort((a, b) => a.startDay.getTime() - b.startDay.getTime() || a.startTimeOffset - b.startTimeOffset);
+  const taskSort = (list: CamperTask[]) => [...list].sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime() || a.timeOffset - b.timeOffset);
+  const tasks = useEntityCache<CamperTask>('tasks', '/camper-task', taskSort);
+
+  const orgTaskSort = (list: OrganizerTask[]) => [...list].sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime() || a.timeOffset - b.timeOffset);
+  const organizerTasks = useEntityCache<OrganizerTask>('organizerTasks', '/organizer-task', orgTaskSort);
+
+  const progSort = (list: Program[]) => [...list].sort((a, b) => new Date(a.startDay).getTime() - new Date(b.startDay).getTime() || a.startTimeOffset - b.startTimeOffset);
   const programs = useEntityCache<Program>('programs', '/program', progSort);
+
+  const settings = useEntityCache<Setting>('settings', '/setting', d => [...d].sort((a, b) => a.label.localeCompare(b.label)));
+
+  const deadlineSort = (list: Deadline[]) => [...list].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const deadlines = useEntityCache<Deadline>('deadlines', '/deadline', deadlineSort);
 
   // --- EGYEDI LOGIKÁK ---
 
@@ -137,18 +168,26 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
   const flushCache = () => {
     setLastFetched({});
     setDashboardData(null);
-    // Minden belső setData([]) hívása
+    roles.setData([]);
     infos.setData([]);
     contacts.setData([]);
     teams.setData([]);
     activities.setData([]);
     brings.setData([]);
     tasks.setData([]);
+    organizerActivities.setData([]);
+    organizerTasks.setData([]);
     programs.setData([]);
+    settings.setData([]);
+    deadlines.setData([]);
   };
 
   return (
     <DbContext.Provider value={{
+      getRoles: roles.getAll,
+      addRoleToCache: (n) => roles.updateCache(p => [...p, n]),
+      removeRoleFromCache: (id) => roles.updateCache(p => p.filter(r => r.id !== id)),
+
       getInfos: infos.getAll, getInfo: infos.getOne,
       addInfoToCache: (n) => infos.updateCache(p => [...p, n]),
       updateInfoInCache: (u) => infos.updateCache(p => p.map(i => i.id === u.id ? u : i)),
@@ -160,17 +199,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
       removeContactFromCache: (id) => contacts.updateCache(p => p.filter(c => c.id !== id)),
       reorderContactsInCache,
 
-      getTasks: tasks.getAll,
-      addTaskToCache: (n) => tasks.updateCache(p => [...p, { ...n, day: new Date(n.day) }]),
-      addTasksToCache: (ns) => tasks.updateCache(p => [...p, ...ns.map(n => ({ ...n, day: new Date(n.day) }))]),
-      removeTaskFromCache: (id) => tasks.updateCache(p => p.filter(t => t.id !== id)),
-
-      getPrograms: programs.getAll, getProgram: programs.getOne,
-      addProgramToCache: (n) => programs.updateCache(p => [...p, { ...n, startDay: normalizeToUtcNoon(n.startDay), endDay: normalizeToUtcNoon(n.endDay) }]),
-      updateProgramInCache: (u) => programs.updateCache(p => p.map(i => i.id === u.id ? u : i)),
-      removeProgramFromCache: (id) => programs.updateCache(p => p.filter(i => i.id !== id)),
-
-      getTeams: teams.getAll, getTeam: teams.getOne, 
+      getTeams: teams.getAll, getTeam: teams.getOne,
       addTeamToCache: (n) => teams.updateCache(p => [n, ...p]),
       updateTeamInCache: (u) => teams.updateCache(p => p.map(t => t.id === u.id ? u : t)),
       removeTeamFromCache: (id) => teams.updateCache(p => p.filter(t => t.id !== id)),
@@ -180,10 +209,38 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
       updateActivityInCache: (u) => activities.updateCache(p => p.map(a => a.id === u.id ? u : a)),
       removeActivityFromCache: (id) => activities.updateCache(p => p.filter(a => a.id !== id)),
 
-      getBrings: brings.getAll, 
-      addBringToCache: (n) => brings.updateCache(p => [...p, n]), 
+      getTasks: tasks.getAll,
+      addTasksToCache: (ns) => tasks.updateCache(p => [...p, ...ns]),
+      removeTaskFromCache: (id) => tasks.updateCache(p => p.filter(t => t.id !== id)),
+
+      getOrganizerActivities: organizerActivities.getAll, getOrganizerActivity: organizerActivities.getOne,
+      addOrganizerActivityToCache: (n) => organizerActivities.updateCache(p => [...p, n]),
+      updateOrganizerActivityInCache: (u) => organizerActivities.updateCache(p => p.map(a => a.id === u.id ? u : a)),
+      removeOrganizerActivityFromCache: (id) => organizerActivities.updateCache(p => p.filter(a => a.id !== id)),
+
+      getOrganizerTasks: organizerTasks.getAll,
+      addOrganizerTasksToCache: (ns) => organizerTasks.updateCache(p => [...p, ...ns]),
+      removeOrganizerTaskFromCache: (id) => organizerTasks.updateCache(p => p.filter(t => t.id !== id)),
+
+      getBrings: brings.getAll,
+      addBringToCache: (n) => brings.updateCache(p => [...p, n]),
       removeBringFromCache: (id) => brings.updateCache(p => p.filter(b => b.id !== id)),
-      
+
+      getPrograms: programs.getAll, getProgram: programs.getOne,
+      addProgramToCache: (n) => programs.updateCache(p => [...p, { ...n, startDay: normalizeToUtcNoon(n.startDay), endDay: normalizeToUtcNoon(n.endDay) }]),
+      updateProgramInCache: (u) => programs.updateCache(p => p.map(i => i.id === u.id ? u : i)),
+      removeProgramFromCache: (id) => programs.updateCache(p => p.filter(i => i.id !== id)),
+
+      getSettings: settings.getAll, getSetting: settings.getOne,
+      addSettingToCache: (n) => settings.updateCache(p => [...p, n]),
+      updateSettingInCache: (u) => settings.updateCache(p => p.map(s => s.id === u.id ? u : s)),
+      removeSettingFromCache: (id) => settings.updateCache(p => p.filter(s => s.id !== id)),
+
+      getDeadlines: deadlines.getAll, getDeadline: deadlines.getOne,
+      addDeadlineToCache: (n) => deadlines.updateCache(p => [...p, n]),
+      updateDeadlineInCache: (u) => deadlines.updateCache(p => p.map(d => d.id === u.id ? u : d)),
+      removeDeadlineFromCache: (id) => deadlines.updateCache(p => p.filter(d => d.id !== id)),
+
       getDashboardData, flushCache
     }}>
       {children}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Calendar, Users, Contact, ClipboardList, Info, Home, List, CheckCheck, LogOut } from 'lucide-react'; // Ajánlott ikoncsomag
+import { Menu, X, Calendar, Users, Contact, ClipboardList, Info, Home, List, CheckCheck, LogOut, Tag, Settings, Clock } from 'lucide-react';
 import AdminButton from '../components/admin/AdminButton';
 import { useAuth } from '../context/admin/AuthContext';
 
@@ -18,14 +18,19 @@ const AdminLayout = () => {
   const location = useLocation();
 
   const menuItems = user ? [
-    { name: 'Irányítópult', icon: <Home size={20} />, path: '/admin' },
+    { name: 'Vezérlőpult', icon: <Home size={20} />, path: '/admin' },
     { name: 'Programok', icon: <Calendar size={20} />, path: '/admin/programs' },
     { name: 'Csapatok', icon: <Users size={20} />, path: '/admin/teams' },
     { name: 'Kontaktok', icon: <Contact size={20} />, path: '/admin/contacts' },
+    { name: 'Szerepkörök', icon: <Tag size={20} />, path: '/admin/roles' },
     { name: 'Fontos infók', icon: <Info size={20} />, path: '/admin/infos' },
     { name: 'Mit hozz?', icon: <CheckCheck size={20} />, path: '/admin/brings' },
-    { name: 'Tevékenységek', icon: <List size={20} />, path: '/admin/activities' },
-    { name: 'Feladatok', icon: <ClipboardList size={20} />, path: '/admin/tasks' },
+    { name: 'Tábori tevékenységek', icon: <List size={20} />, path: '/admin/activities' },
+    { name: 'Tábori feladatok', icon: <ClipboardList size={20} />, path: '/admin/tasks' },
+    { name: 'Szervezői tevékenységek', icon: <List size={20} />, path: '/admin/organizer-activities' },
+    { name: 'Szervezői feladatok', icon: <ClipboardList size={20} />, path: '/admin/organizer-tasks' },
+    { name: 'Határidők', icon: <Clock size={20} />, path: '/admin/deadlines' },
+    { name: 'Beállítások', icon: <Settings size={20} />, path: '/admin/settings' },
   ] : [];
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -42,7 +47,7 @@ const AdminLayout = () => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-30 w-64 bg-indigo-900 text-white transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-30 w-64 bg-indigo-900 text-white transform transition-transform duration-300 ease-in-out flex flex-col
         lg:relative lg:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -53,7 +58,7 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        <nav className="mt-4 px-3 space-y-1">
+        <nav className="mt-4 px-3 space-y-1 overflow-y-auto flex-1 pb-4">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
