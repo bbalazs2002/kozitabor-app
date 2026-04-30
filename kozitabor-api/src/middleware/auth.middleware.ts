@@ -1,5 +1,6 @@
 import { type Request, type Response, type NextFunction } from "express";
 import jwt, { type Secret } from 'jsonwebtoken';
+import { logger } from '../utils/logger.js';
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
@@ -13,7 +14,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   const secret: Secret | undefined = process.env.JWT_SECRET;
 
   if (!secret) {
-    console.error("HIÁNYZÓ KONFIGURÁCIÓ: JWT_SECRET nincs beállítva!");
+    logger.error("Hiányzó konfiguráció: JWT_SECRET nincs beállítva.");
     return res.status(500).json({ error: "Szerver hiba" });
   }
 

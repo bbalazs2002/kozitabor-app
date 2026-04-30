@@ -30,3 +30,14 @@ npx prisma migrate dev --name [migration name]
 docker exec -it <konténer_neve_vagy_id> node <path_to_seeder_script>
 docker exec -it kozitabor-api node dist/seeder/seed.js
 docker exec -it kozitabor-api node dist/seeder/users.js
+
+# read logs
+docker exec kozitabor-api tail -f /app/logs/combined.log
+docker exec kozitabor-api tail -f /app/logs/error.log
+
+
+# files
+/var/lib/docker/volumes/.../_data/
+/var/lib/docker/volumes/.../_data/combined.log
+/var/lib/docker/volumes/.../_data/error.log
+/var/lib/docker/volumes/.../_data/uploads

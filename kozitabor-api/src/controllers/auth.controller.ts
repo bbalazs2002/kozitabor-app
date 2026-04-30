@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt'
 import { Secret } from "jsonwebtoken";
 import { signAsync } from '../utils/jwt';
+import { logger } from '../utils/logger.js';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -25,7 +26,7 @@ export const login = async (req: Request, res: Response) => {
     const secret: Secret | undefined = process.env.JWT_SECRET;
 
     if (!secret) {
-      console.error("HIÁNYZÓ KONFIGURÁCIÓ: JWT_SECRET nincs beállítva!");
+      logger.error("Hiányzó konfiguráció: JWT_SECRET nincs beállítva.");
       return res.status(500).json({ error: "Szerver konfigurációs hiba" });
     }
 

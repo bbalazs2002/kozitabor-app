@@ -33,6 +33,7 @@ services:
       - .env
     volumes:
       - kozitabor_uploads:/app/uploads
+      - kozitabor_logs:/app/logs
 
   kozitabor-react:
     image: kozitabor-react:latest
@@ -48,3 +49,4 @@ services:
 volumes:
   kozitabor_postgres_data:
   kozitabor_uploads:
+  kozitabor_logs:

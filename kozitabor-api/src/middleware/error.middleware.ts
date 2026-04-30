@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger.js';
 
 export const errorHandler = (err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -20,6 +21,6 @@ export const errorHandler = (err: unknown, _req: Request, res: Response, _next: 
     return;
   }
 
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err });
   res.status(500).json({ error: 'Belső szerver hiba.' });
 };
