@@ -136,9 +136,68 @@ const freePort = (ports) => {
     }
 };
 
+// env setup
+const setupEnv = async () => {
+    const envPath = path.join(process.cwd(), '.env');
+    const samplePath = path.join(process.cwd(), '.env.sample');
+
+    if (fs.existsSync(envPath)) {
+        console.log('ℹ️  .env file already exists, skipping setup.');
+        return;
+    }
+
+    if (!fs.existsSync(samplePath)) {
+        console.log('⚠️  .env.sample not found, skipping .env setup.');
+        return;
+    }
+
+    console.log('\n--- ⚙️  Environment Setup ---');
+    console.log('ℹ️  No .env file found. Fill in the values below (Enter = keep default).\n');
+
+    const lines = fs.readFileSync(samplePath, 'utf8').split('\n');
+    const outputLines = [];
+
+    for (const line of lines) {
+        const keyValueMatch = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)/);
+
+        if (!keyValueMatch) {
+            const trimmed = line.trim();
+            // Print non-empty comment lines as section context
+            if (trimmed.startsWith('#') && trimmed.replace(/#/g, '').trim()) {
+                console.log(`  ${trimmed}`);
+            }
+            outputLines.push(line);
+            continue;
+        }
+
+        const key = keyValueMatch[1];
+        // Strip inline comment (e.g. "value"\t# comment)
+        const rawValue = keyValueMatch[2].split(/\t#/)[0].trim();
+        // Strip surrounding quotes
+        const unquoted = rawValue.replace(/^["']|["']$/g, '');
+        // Placeholder: value is entirely wrapped in [ ]
+        const isPlaceholder = /^\[.+\]$/.test(unquoted);
+
+        if (isPlaceholder) {
+            const hint = unquoted.slice(1, -1);
+            const answer = await askQuestion(`   ${key} (${hint}): `);
+            outputLines.push(`${key}="${answer.trim()}"`);
+        } else {
+            const answer = await askQuestion(`   ${key} [${unquoted}]: `);
+            outputLines.push(`${key}="${answer.trim() || unquoted}"`);
+        }
+    }
+
+    fs.writeFileSync(envPath, outputLines.join('\n'), 'utf8');
+    console.log('\n✅ .env file created successfully.\n');
+};
+
 // initialization
 const init = async () => {
     console.log('🚀 Starting environment initialization...');
+
+    // 0. .env setup
+    await setupEnv();
 
     // 1. Dependencies
     runStep('Installing API dependencies', 'npm install --legacy-peer-deps', 'kozitabor-api');
@@ -280,8 +339,13 @@ const runTests = async () => {
 const build = async () => {
     console.log('🏗️ Starting build process (Production)...');
 
-    // 1. Extract VITE_API_BASE_URL from the root .env file
-    let viteUrl = "/kozitabor/api"; 
+    // 1. Ask for target platform
+    const platformInput = await askQuestion('🖥️  Target platform [linux/amd64]: ');
+    const platform = platformInput.trim() || 'linux/amd64';
+    console.log(`ℹ️ Building for platform: ${platform}`);
+
+    // 2. Extract VITE_API_BASE_URL from the root .env file
+    let viteUrl = "/kozitabor/api";
     try {
         const envContent = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf8');
         const match = envContent.match(/VITE_API_BASE_URL=["']?([^"'\s]+)["']?/);
@@ -291,15 +355,15 @@ const build = async () => {
         console.log('⚠️ Root .env file not found, using default URL.');
     }
 
-    // 2. Prepare build directory
+    // 3. Prepare build directory
     if (!fs.existsSync('./build')) fs.mkdirSync('./build');
 
-    // 3. Docker Build
-    runStep('API Docker Build', 
-        `docker build --no-cache --platform linux/amd64 -t kozitabor-api:latest ./kozitabor-api`, '.');
-    
-    runStep('React Docker Build', 
-        `docker build --no-cache --platform linux/amd64 --build-arg VITE_API_BASE_URL="${viteUrl}" -t kozitabor-react:latest ./kozitabor-react`, '.');
+    // 4. Docker Build
+    runStep('API Docker Build',
+        `docker build --no-cache --platform ${platform} -t kozitabor-api:latest ./kozitabor-api`, '.');
+
+    runStep('React Docker Build',
+        `docker build --no-cache --platform ${platform} --build-arg VITE_API_BASE_URL="${viteUrl}" -t kozitabor-react:latest ./kozitabor-react`, '.');
 
     // 4. Export using Node.js streams and Zlib
     const exportImage = async (imageName, fileName) => {

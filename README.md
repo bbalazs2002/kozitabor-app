@@ -139,6 +139,8 @@ The recommended workflow uses `devtool.mjs`, which handles database startup, dep
 
 ```bash
 # 1. Install dependencies and run initial DB migrations
+#    If no root .env file exists, init will copy .env.sample and
+#    interactively prompt for each variable value.
 node devtool.mjs init
 
 # 2. Seed the database with content and admin users
@@ -186,6 +188,16 @@ The API and the frontend each have a `.env.development` file committed with pre-
 | `kozitabor-api/.env.development` | `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `API_PORT`, `CLIENT_URL`, `CLIENT_PORT`, `IS_DEV` |
 | `kozitabor-react/.env.development` | `VITE_API_BASE_URL` |
 
+For **production**, a root-level `.env` file is required (not committed). A `.env.sample` template is provided — `node devtool.mjs init` generates `.env` from it interactively if the file is missing.
+
+| Variable | Description |
+|---|---|
+| `DB_NAME`, `DB_USER`, `DB_PASS` | PostgreSQL credentials used by Docker Compose |
+| `JWT_SECRET` | Random string (min. 64 chars) for signing tokens |
+| `JWT_EXPIRES_IN` | Token lifetime (default: `1h`) |
+| `CLIENT_URL`, `CLIENT_PORT`, `API_PORT` | Service URLs and ports |
+| `VITE_API_BASE_URL` | Relative API path baked into the React build (e.g. `/kozitabor/api`) |
+
 ---
 
 ## Admin Authentication
@@ -222,7 +234,7 @@ node devtool.mjs
 
 | Command | Description |
 |---|---|
-| `init` | Install npm dependencies for both packages and run initial DB migrations |
+| `init` | Create `.env` from `.env.sample` (if missing, prompts for values), install npm dependencies, run DB migrations |
 | `run` | Start all services: DB (Docker), API, React (both in background) |
 | `run db` | Start only the PostgreSQL Docker container |
 | `run api` | Start only the backend API in the background |
@@ -235,7 +247,7 @@ node devtool.mjs
 | `seed data` | Start DB, seed content tables only, stop DB |
 | `seed user` | Start DB, seed admin user accounts only, stop DB |
 | `test` | Start DB, run the full API integration test suite, stop DB |
-| `build` | Build Docker images for API and React, export as `.tar.gz` |
+| `build` | Prompt for target platform (default: `linux/amd64`), build Docker images, export as `.tar.gz` |
 | `deploy` | Upload build artifacts to remote server via SCP and restart Docker services |
 
 Background service logs are written to `log/api.log` and `log/react.log`.
@@ -244,6 +256,8 @@ Background service logs are written to `log/api.log` and `log/react.log`.
 
 ```bash
 # 1. Build production images
+#    Prompts for target platform — press Enter for the default (linux/amd64),
+#    or type e.g. linux/arm64 for ARM servers.
 node devtool.mjs build
 
 # 2. Deploy to remote server (prompts for SSH details, saves to .deploy.json)
