@@ -1,12 +1,14 @@
 import 'dotenv/config';
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import path from "path";
 import coreRoutes from './routes/core.js';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
 import { prisma } from './lib/prisma';
 import { apiLimiter } from './middleware/rateLimiter.js';
+import { errorHandler } from './middleware/error.middleware.js';
 
 // .env check
 if (!process.env.CLIENT_URL || !process.env.CLIENT_PORT) {
@@ -21,6 +23,7 @@ const isDev = process.env.IS_DEV === 'true';
 const origin = isDev ? true : `${process.env.CLIENT_URL}:${process.env.CLIENT_PORT}`;
 const app = express();
 app.set('trust proxy', 1);
+app.use(helmet());
 app.use(cors({
   origin: origin,
   credentials: true,
@@ -36,6 +39,7 @@ app.use('/api', apiLimiter);
 app.use('/api', coreRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+app.use(errorHandler);
 
 // Run server and open port 5000
 const PORT = process.env.API_PORT;
