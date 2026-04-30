@@ -1,7 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { createBaseService } from '../../services/base.service.js';
 
-export const userService = createBaseService(prisma.user);
 export const contactService = createBaseService(prisma.contact);
 export const roleService = createBaseService(prisma.role);
 export const bringService = createBaseService(prisma.bring);

@@ -24,18 +24,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // 1. BE KELL VÁRNI a bejelentkezést (await)
-      const user = await auth.login({
-        email: email,
-        password: password
-      });
-      console.log("user", user);
-
-      return;
-
-      // 2. Ha idáig eljutott (nem dobott hibát), akkor sikeres!
-      // Irány az admin főoldal
-      navigate('/admin/dashboard'); 
+      await auth.login({ email, password });
     } catch (err: any) {
       // 3. Itt kapjuk el a back-endről jövő hibaüzenetet
       setError(err.message || 'Sikertelen bejelentkezés. Ellenőrizd az adataidat!');

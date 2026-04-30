@@ -6,6 +6,7 @@ import coreRoutes from './routes/core.js';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
 import { prisma } from './lib/prisma';
+import { apiLimiter } from './middleware/rateLimiter.js';
 
 // .env check
 if (!process.env.CLIENT_URL || !process.env.CLIENT_PORT) {
@@ -19,6 +20,7 @@ if (!process.env.API_PORT) {
 const isDev = process.env.IS_DEV === 'true';
 const origin = isDev ? true : `${process.env.CLIENT_URL}:${process.env.CLIENT_PORT}`;
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors({
   origin: origin,
   credentials: true,
@@ -30,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.resolve('uploads')));
 
 // Configure routes
+app.use('/api', apiLimiter);
 app.use('/api', coreRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
@@ -40,7 +43,7 @@ const server = app.listen(PORT, () => {
   console.log(`\x1b[32m%s\x1b[0m`, `🚀 TypeScript API szerver fut: http://localhost:${PORT}`);
 });
 
-// On server shotdown
+// On server shutdown
 const shutdown = async (signal: string) => {
   console.log(`\n${signal} érkezett. A szerver leállítása folyamatban...`);
   

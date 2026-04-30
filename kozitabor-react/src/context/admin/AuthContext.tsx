@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } catch (err) {
         console.error("Bejelentkezési hiba:", err);
-        throw(new Error);
+        throw err;
       }
       
       if (data && data.token) {

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode, useCallback} from 'react';
-import { type Activity, type Bring, type CamperTask, type Contact, type Deadline, type DashboardSummary, type Info, type OrganizerActivity, type OrganizerTask, type Program, type Role, type Setting, type Team } from '../../types/database';
+import { type Activity, type Bring, type CamperTask, type Contact, type Deadline, type Info, type OrganizerActivity, type OrganizerTask, type Program, type Role, type Setting, type Team } from '../../types/database';
 import { adminApiRequest } from '../../utils/api';
 import { normalizeToUtcNoon } from '../../utils/dateHelpers';
 
@@ -71,9 +71,6 @@ interface DbContextType {
   addDeadlineToCache: (d: Deadline) => void;
   updateDeadlineInCache: (d: Deadline) => void;
   removeDeadlineFromCache: (id: number) => void;
-  // Dashboard
-  getDashboardData: () => Promise<DashboardSummary>;
-  //
   flushCache: () => void;
 }
 
@@ -81,7 +78,6 @@ const DbContext = createContext<DbContextType | undefined>(undefined);
 
 export const DbProvider = ({ children }: { children: ReactNode }) => {
   const [lastFetched, setLastFetched] = useState<Record<string, number | null>>({});
-  const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
 
   // --- GENERIKUS CACHE ENGINE ---
   const useEntityCache = <T extends { id: number }>(
@@ -155,19 +151,8 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
     })));
   };
 
-  const getDashboardData = async () => {
-    if (dashboardData && lastFetched['dashboard'] && Date.now() - lastFetched['dashboard'] < CACHE_TIME) {
-      return dashboardData;
-    }
-    const res = await adminApiRequest('/dashboard');
-    setDashboardData(res);
-    setLastFetched(prev => ({ ...prev, dashboard: Date.now() }));
-    return res;
-  };
-
   const flushCache = () => {
     setLastFetched({});
-    setDashboardData(null);
     roles.setData([]);
     infos.setData([]);
     contacts.setData([]);
@@ -241,7 +226,7 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
       updateDeadlineInCache: (u) => deadlines.updateCache(p => p.map(d => d.id === u.id ? u : d)),
       removeDeadlineFromCache: (id) => deadlines.updateCache(p => p.filter(d => d.id !== id)),
 
-      getDashboardData, flushCache
+      flushCache
     }}>
       {children}
     </DbContext.Provider>

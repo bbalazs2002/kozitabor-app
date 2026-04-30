@@ -31,6 +31,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    volumes:
+      - kozitabor_uploads:/app/uploads
 
   kozitabor-react:
     image: kozitabor-react:latest
@@ -45,3 +47,4 @@ services:
 
 volumes:
   kozitabor_postgres_data:
+  kozitabor_uploads:
