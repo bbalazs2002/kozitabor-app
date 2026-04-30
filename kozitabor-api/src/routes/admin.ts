@@ -42,7 +42,7 @@ router.delete('/role/:id', catchAsync(CF.delete(roleService)));
 
 // --- TEAMS & CAMPERS ---
 router.get('/team', catchAsync(CF.getAll(teamService, { include: { leaders: { include: { contact: true } } }, orderBy: { name: 'asc' } })));
-router.get('/team/:id', catchAsync(CF.getOne(teamService, { include: { leaders: { include: { contact: true } }, campers: true } })));
+router.get('/team/:id', catchAsync(CF.getOne(teamService, { leaders: { include: { contact: true } }, campers: true })));
 router.post('/team', validateBody(teamSchema), catchAsync(adminController.createTeam));
 router.put('/team/:id', validateBody(teamSchema), catchAsync(adminController.updateTeam));
 router.delete('/team/:id', catchAsync(CF.delete(teamService)));

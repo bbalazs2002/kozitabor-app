@@ -30,26 +30,6 @@ const ensureLogDir = () => {
     if (!fs.existsSync('./log')) fs.mkdirSync('./log');
 };
 /**
- * Scans a log file for a URL/Port pattern
- */
-const detectPortFromLog = async (logPath, fallbackPort) => {
-    const logFile = path.join(process.cwd(), logPath);
-    let attempts = 0;
-    const maxAttempts = 20; // ~10 seconds
-
-    while (attempts < maxAttempts) {
-        if (fs.existsSync(logFile)) {
-            const content = fs.readFileSync(logFile, 'utf8');
-            // Regex to find: http://localhost:5173 or similar
-            const match = content.match(/http:\/\/localhost:(\d+)/);
-            if (match) return match[1];
-        }
-        await new Promise(resolve => setTimeout(resolve, 500));
-        attempts++;
-    }
-    return fallbackPort; // Return default if detection fails
-};
-/**
  * Scrapes a specific key's value from an .env file using Regex
  */
 const getEnvValue = (dir, key, defaultValue = 'N/A') => {
@@ -166,9 +146,8 @@ const init = async () => {
 
     // 2. Database for Prisma (Temporary start)
     console.log('\n--- 🐘 Database Setup (Temporary) ---');
-    runDB(); // Using your refactored runDB() function
-
-    runStep('Waiting for database to be ready (5s)', 'node -e "setTimeout(() => {}, 5000)"');
+    await runDB();
+    await waitForDB();
 
     // 3. Prisma & Seed
     runStep('Generating Prisma Client', 'npx dotenv -e .env.development npx prisma generate', 'kozitabor-api');
@@ -200,6 +179,25 @@ const seedUser = () => {
 // run dev
 const runDB = async () => {
     runStep('Starting Database', 'docker-compose up -d', 'development-db');
+};
+const waitForDB = async () => {
+    const maxAttempts = 20;
+    process.stdout.write('\n--- ⏳ Waiting for database');
+    for (let i = 0; i < maxAttempts; i++) {
+        try {
+            const status = execSync(
+                'docker inspect --format="{{.State.Health.Status}}" dev-postgres',
+                { stdio: 'pipe' }
+            ).toString().trim().replace(/"/g, '');
+            if (status === 'healthy') {
+                console.log(' ready! ✅');
+                return;
+            }
+        } catch { /* container not yet available */ }
+        process.stdout.write('.');
+        await new Promise(r => setTimeout(r, 500));
+    }
+    console.log(' timeout! ⚠️ (Proceeding anyway...)');
 };
 const runAPI = () => {
     ensureLogDir();
@@ -254,6 +252,28 @@ const stopAPI = () => {
 const stopReact = () => {
     freePort([5173]);
     console.log('\n✅ React stopped.');
+};
+
+// test
+const runTests = async () => {
+    await runDB();
+    await waitForDB();
+
+    let testFailed = false;
+    console.log('\n--- 🧪 Running API tests ---');
+    try {
+        execSync('npm test', {
+            cwd: path.join(process.cwd(), 'kozitabor-api'),
+            stdio: 'inherit',
+            shell: true
+        });
+    } catch (e) {
+        testFailed = true;
+    }
+
+    stopDB();
+
+    if (testFailed) process.exit(1);
 };
 
 // build
@@ -539,6 +559,14 @@ const startRemoteServer = async ({server, user, port, keyPath, targetDir}) => {
     }
 };
 const deploy = async () => {
+    const requiredFiles = ['./build/api.tar.gz', './build/react.tar.gz'];
+    const missing = requiredFiles.filter(f => !fs.existsSync(f));
+    if (missing.length > 0) {
+        console.error(`❌ Build artifacts missing: ${missing.join(', ')}`);
+        console.log('💡 Run "node devtool.mjs build" first.');
+        process.exit(1);
+    }
+
     const conf = await readRemoteServerData();
     if (!await checkRemoteDirBackup(conf)) {
         return;
@@ -563,37 +591,34 @@ const commands = [
         pattern: /^seed\s+data$/i,
         name: 'seed data',
         desc: 'Seed core application data',
-        exec: () => {
-            runDB();
-            setTimeout(() => {
-                seedCore();
-                stop();
-            }, 5000);
+        exec: async () => {
+            await runDB();
+            await waitForDB();
+            seedCore();
+            stop();
         }
     },
     {   // seed user
         pattern: /^seed\s+user$/i,
         name: 'seed user',
         desc: 'Seed admin user',
-        exec: () => {
-            runDB();
-            setTimeout(() => {
-                seedUser();
-                stop();
-            }, 5000);
+        exec: async () => {
+            await runDB();
+            await waitForDB();
+            seedUser();
+            stop();
         }
     },
     {   // seed
         pattern: /^seed$/i,
         name: 'seed',
         desc: 'Seed both core data and admin users',
-        exec: () => {
-            runDB();
-            setTimeout(() => {
-                seedCore();
-                seedUser();
-                stop();
-            }, 5000);
+        exec: async () => {
+            await runDB();
+            await waitForDB();
+            seedCore();
+            seedUser();
+            stop();
         }
     },
     {   // stop|down|exit
@@ -609,7 +634,7 @@ const commands = [
         exec: () => stopDB()
     },
     {   // stop|down|exit api
-        pattern: /^(stop|down|exit)\sapi+$/i,
+        pattern: /^(stop|down|exit)\s+api$/i,
         name: 'stop api',
         desc: 'Stop API (aliases: down api, exit api)',
         exec: () => stopAPI()
@@ -633,18 +658,18 @@ const commands = [
         pattern: /^(run|start)\s+api$/i,
         name: 'run api',
         desc: 'Start the Backend API in the background',
-        exec: async () => {
-            const apiPort = await runAPI();
-            writeActiveServiceList(['api'], {api: apiPort});
+        exec: () => {
+            runAPI();
+            writeActiveServiceList(['api']);
         }
     },
     {   // run react
         pattern: /^(run|start)\s+react$/i,
         name: 'run react',
         desc: 'Start the Frontend React app in the background',
-        exec: async () => {
-            const reactPort = await runReact();
-            writeActiveServiceList(['react'], {react: reactPort});
+        exec: () => {
+            runReact();
+            writeActiveServiceList(['react']);
         }
     },
     {   // run|start (all)
@@ -653,16 +678,17 @@ const commands = [
         desc: 'Start all services (DB, API, React) (aliases: start)',
         exec: async () => {
             console.log('🚀 Starting all services...');
-
             await runDB();
-            const apiPort = await runAPI();
-            const reactPort = await runReact();
-            
-            writeActiveServiceList(['db', 'api', 'react'], { 
-                api: apiPort, 
-                react: reactPort 
-            });
+            runAPI();
+            runReact();
+            writeActiveServiceList(['db', 'api', 'react']);
         }
+    },
+    {   // test
+        pattern: /^test$/i,
+        name: 'test',
+        desc: 'Run API integration tests (starts/stops DB automatically)',
+        exec: async () => runTests()
     },
     {   // build
         pattern: /^build$/i,
