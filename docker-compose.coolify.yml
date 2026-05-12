@@ -1,0 +1,31 @@
+services:
+  kozitabor-api:
+    build: ./kozitabor-api
+    restart: always
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      API_PORT: ${API_PORT}
+      CLIENT_URL: ${CLIENT_URL}
+      CLIENT_PORT: ${CLIENT_PORT}
+    volumes:
+      - kozitabor_uploads:/app/uploads
+      - kozitabor_logs:/app/logs
+
+  kozitabor-react:
+    build:
+      context: ./kozitabor-react
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - kozitabor-api
+
+volumes:
+  kozitabor_uploads:
+  kozitabor_logs:
