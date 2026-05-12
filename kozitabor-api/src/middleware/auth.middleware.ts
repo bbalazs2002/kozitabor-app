@@ -1,11 +1,11 @@
-import { type Request, type Response, type NextFunction } from "express";
-import jwt, { type Secret } from 'jsonwebtoken';
-import { logger } from '../utils/logger.js';
+import { type NextFunction, type Request, type Response } from "express";
+import jwt, { type Secret } from "jsonwebtoken";
+import { logger } from "../utils/logger.js";
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers["authorization"];
   // A fejléc formátuma: "Bearer <token>"
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ error: "Hozzáférés megtagadva. Nincs token." });
@@ -26,8 +26,8 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 
     // A 'decoded' tartalmazza a login-nál belepakolt id-t, email-t, name-et
     // Kényszerítjük a típust, hogy az Express Request elfogadja
-    req.user = decoded as any; 
-    
-    next(); 
+    req.user = decoded as any;
+
+    next();
   });
 };

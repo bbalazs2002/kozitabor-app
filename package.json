@@ -1,5 +1,6 @@
 {
     "scripts": {
+        "install:all": "npm install && npm install --prefix kozitabor-api && npm install --prefix kozitabor-react",
         "devtool": "node devtool.mjs",
         "prepare": "husky",
         "lint-staged": "lint-staged",

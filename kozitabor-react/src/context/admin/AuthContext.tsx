@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApiRequest } from '../../utils/api';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { authApiRequest } from "../../utils/api";
 
 interface AuthContextType {
   user: any;
@@ -18,10 +18,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshSession = async () => {
     try {
       setLoading(true);
-      // Az apiRequest-be épített 401 kezelés miatt, ha nincs token vagy rossz, 
+      // Az apiRequest-be épített 401 kezelés miatt, ha nincs token vagy rossz,
       // az automatikusan logout-ot vált ki, de itt manuálisan is kezeljük:
-      const data = await authApiRequest('/session');
-      
+      const data = await authApiRequest("/session");
+
       if (data && data.user) {
         setUser(data.user);
         return data.user;
@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         return null;
       }
-    } catch (error) {
+    } catch {
       setUser(null);
       return null;
     } finally {
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getSession = async () => {
     return await refreshSession();
-  }
+  };
 
   const login = async (credentials: any) => {
     try {
@@ -47,22 +47,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Itt hívjuk meg a bejelentkezést
       let data = null;
       try {
-        data = await authApiRequest('/login', {
-          method: 'POST',
-          body: JSON.stringify(credentials)
+        data = await authApiRequest("/login", {
+          method: "POST",
+          body: JSON.stringify(credentials),
         });
       } catch (err) {
         console.error("Bejelentkezési hiba:", err);
         throw err;
       }
-      
+
       if (data && data.token) {
         // Token elmentése (ez kell az apiRequest-nek a következő kérésekhez)
-        localStorage.setItem('kozitabor_token', data.token);
+        localStorage.setItem("kozitabor_token", data.token);
         setUser(data.user);
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
       throw err;
     } finally {
       setLoading(false);
@@ -70,9 +70,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('kozitabor_token');
+    localStorage.removeItem("kozitabor_token");
     setUser(null);
-    window.location.href = '/kozitabor/auth/login';
+    window.location.href = "/kozitabor/auth/login";
   };
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

@@ -1,55 +1,54 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AdminLayout  from './layouts/AdminLayout';
-import DashboardPage from './pages/admin/DashboardPage'
-import AdminProviders from './providers/AdminProviders';
-import ProgramListPage from './pages/admin/ProgramListPage';
-import ProgramFormPage from './pages/admin/ProgramFormPage';
-import TeamListPage from './pages/admin/TeamListPage';
-import { TeamFormPage } from './pages/admin/TeamFormPage';
-import ContactListPage from './pages/admin/ContactListPage';
-import { ContactFormPage } from './pages/admin/ContactFormPage';
-import InfoListPage from './pages/admin/InfoListPage';
-import InfoFormPage from './pages/admin/InfoFormPage';
-import ActivityListPage from './pages/admin/ActivityListPage';
-import { ActivityFormPage } from './pages/admin/ActivityFormPage';
-import TaskListPage from './pages/admin/TaskListPage';
-import TaskFormPage from './pages/admin/TaskFormPage';
-import BringListPage from './pages/admin/BringListPage';
-import { BringFormPage } from './pages/admin/BringFormPage';
-import RoleListPage from './pages/admin/RoleListPage';
-import OrganizerActivityListPage from './pages/admin/OrganizerActivityListPage';
-import { OrganizerActivityFormPage } from './pages/admin/OrganizerActivityFormPage';
-import OrganizerTaskListPage from './pages/admin/OrganizerTaskListPage';
-import OrganizerTaskFormPage from './pages/admin/OrganizerTaskFormPage';
-import SettingsListPage from './pages/admin/SettingsListPage';
-import SettingsFormPage from './pages/admin/SettingsFormPage';
-import DeadlineListPage from './pages/admin/DeadlineListPage';
-import DeadlineFormPage from './pages/admin/DeadlineFormPage';
-import { CoreLayout } from './layouts/CoreLayout';
-import HomePage from './pages/core/HomePage';
-import ProgramPage from './pages/core/ProgramPage';
-import InfoPage from './pages/core/InfoPage';
-import { InfoDetailsPage } from './pages/core/InfoDetailsPage';
-import TeamPage from './pages/core/TeamPage';
-import ContactPage from './pages/core/ContactPage';
-import WhatToBringPage from './pages/core/WhatToBringPage';
-import CoreProviders from './providers/CoreProviders';
-import { ProgramDetailsPage } from './pages/core/ProgramDetailsPage';
-import CamperTaskPage from './pages/core/CamperTaskPage';
-import DeadlinePage from './pages/core/DeadlinePage';
-import GYIKPage from './pages/core/GYIKPage';
-import LoginPage from './pages/auth/Login';
-import AuthProviders from './providers/AuthProviders';
-import AuthLayout from './layouts/AuthLayout';
-import { AuthProvider } from './context/admin/AuthContext';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./context/admin/AuthContext";
+import AdminLayout from "./layouts/AdminLayout";
+import AuthLayout from "./layouts/AuthLayout";
+import { CoreLayout } from "./layouts/CoreLayout";
+import { ActivityFormPage } from "./pages/admin/ActivityFormPage";
+import ActivityListPage from "./pages/admin/ActivityListPage";
+import { BringFormPage } from "./pages/admin/BringFormPage";
+import BringListPage from "./pages/admin/BringListPage";
+import { ContactFormPage } from "./pages/admin/ContactFormPage";
+import ContactListPage from "./pages/admin/ContactListPage";
+import DashboardPage from "./pages/admin/DashboardPage";
+import DeadlineFormPage from "./pages/admin/DeadlineFormPage";
+import DeadlineListPage from "./pages/admin/DeadlineListPage";
+import InfoFormPage from "./pages/admin/InfoFormPage";
+import InfoListPage from "./pages/admin/InfoListPage";
+import { OrganizerActivityFormPage } from "./pages/admin/OrganizerActivityFormPage";
+import OrganizerActivityListPage from "./pages/admin/OrganizerActivityListPage";
+import OrganizerTaskFormPage from "./pages/admin/OrganizerTaskFormPage";
+import OrganizerTaskListPage from "./pages/admin/OrganizerTaskListPage";
+import ProgramFormPage from "./pages/admin/ProgramFormPage";
+import ProgramListPage from "./pages/admin/ProgramListPage";
+import RoleListPage from "./pages/admin/RoleListPage";
+import SettingsFormPage from "./pages/admin/SettingsFormPage";
+import SettingsListPage from "./pages/admin/SettingsListPage";
+import TaskFormPage from "./pages/admin/TaskFormPage";
+import TaskListPage from "./pages/admin/TaskListPage";
+import { TeamFormPage } from "./pages/admin/TeamFormPage";
+import TeamListPage from "./pages/admin/TeamListPage";
+import LoginPage from "./pages/auth/Login";
+import CamperTaskPage from "./pages/core/CamperTaskPage";
+import ContactPage from "./pages/core/ContactPage";
+import DeadlinePage from "./pages/core/DeadlinePage";
+import GYIKPage from "./pages/core/GYIKPage";
+import HomePage from "./pages/core/HomePage";
+import { InfoDetailsPage } from "./pages/core/InfoDetailsPage";
+import InfoPage from "./pages/core/InfoPage";
+import { ProgramDetailsPage } from "./pages/core/ProgramDetailsPage";
+import ProgramPage from "./pages/core/ProgramPage";
+import TeamPage from "./pages/core/TeamPage";
+import WhatToBringPage from "./pages/core/WhatToBringPage";
+import AdminProviders from "./providers/AdminProviders";
+import AuthProviders from "./providers/AuthProviders";
+import CoreProviders from "./providers/CoreProviders";
 
 function App() {
   return (
     <BrowserRouter basename="/kozitabor/">
       <AuthProvider>
         <Routes>
-
           {/* FELHASZNÁLÓI OLDALAK */}
           <Route element={<CoreProviders />}>
             <Route element={<CoreLayout />}>
@@ -99,8 +98,14 @@ function App() {
                 <Route path="task/new" element={<TaskFormPage />} />
 
                 {/* ORGANIZER ACTIVITIES & TASKS */}
-                <Route path="organizer-activities" element={<OrganizerActivityListPage />} />
-                <Route path="organizer-activity/:id" element={<OrganizerActivityFormPage />} />
+                <Route
+                  path="organizer-activities"
+                  element={<OrganizerActivityListPage />}
+                />
+                <Route
+                  path="organizer-activity/:id"
+                  element={<OrganizerActivityFormPage />}
+                />
                 <Route path="organizer-tasks" element={<OrganizerTaskListPage />} />
                 <Route path="organizer-task/new" element={<OrganizerTaskFormPage />} />
 

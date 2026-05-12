@@ -1,6 +1,6 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/admin/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from "lucide-react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/admin/AuthContext";
 
 export const ProtectedRoute = () => {
   const { user, loading } = useAuth();
@@ -18,7 +18,7 @@ export const ProtectedRoute = () => {
 
   // 2. Ha nincs user (és már nem is töltünk), mehet a loginra
   if (!user) {
-    // A 'state' segítségével megjegyezzük, honnan jött a júzer, 
+    // A 'state' segítségével megjegyezzük, honnan jött a júzer,
     // hogy belépés után visszaküldhessük oda.
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }

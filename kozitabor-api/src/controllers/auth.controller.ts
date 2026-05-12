@@ -1,10 +1,10 @@
-import 'dotenv/config';
-import { type Request, type Response } from 'express';
-import { prisma } from '../lib/prisma';
-import bcrypt from 'bcrypt'
+import "dotenv/config";
+import bcrypt from "bcrypt";
+import { type Request, type Response } from "express";
 import { Secret } from "jsonwebtoken";
-import { signAsync } from '../utils/jwt';
-import { logger } from '../utils/logger.js';
+import { prisma } from "../lib/prisma";
+import { signAsync } from "../utils/jwt";
+import { logger } from "../utils/logger.js";
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -34,14 +34,14 @@ export const login = async (req: Request, res: Response) => {
     const token = await signAsync(
       { id: user.id, email: user.email, name: user.name },
       secret,
-      { expiresIn: (process.env.JWT_EXPIRES_IN || '1h') as any }
+      { expiresIn: (process.env.JWT_EXPIRES_IN || "1h") as any }
     );
 
-    return res.json({ 
+    return res.json({
       token,
-      user: { id: user.id, email: user.email, name: user.name } 
+      user: { id: user.id, email: user.email, name: user.name },
     });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: "Szerver hiba a bejelentkezés során" });
   }
 };
@@ -52,18 +52,18 @@ export const getSession = async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ user: null });
   }
-  
+
   res.json({ user: req.user });
 };
 
 export const logout = async (_req: Request, res: Response) => {
   /**
-   * Bearer Token esetén a szerveroldali logout általában csak egy válasz, 
+   * Bearer Token esetén a szerveroldali logout általában csak egy válasz,
    * mivel stateless (állapotmentes) hitelesítést használunk.
    * A kliensnek kell törölnie a tokent a tárolóból.
    */
-  return res.json({ 
-    success: true, 
-    message: "Sikeres kijelentkezés. Kérjük, töröld a tokent kliensoldalon!" 
+  return res.json({
+    success: true,
+    message: "Sikeres kijelentkezés. Kérjük, töröld a tokent kliensoldalon!",
   });
 };

@@ -1,4 +1,4 @@
-import jwt, { SignOptions, Secret } from 'jsonwebtoken';
+import jwt, { SignOptions, Secret } from "jsonwebtoken";
 
 /**
  * A jsonwebtoken .sign() metódusának aszinkron (Promise) verziója.

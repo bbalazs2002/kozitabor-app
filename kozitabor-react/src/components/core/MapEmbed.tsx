@@ -1,5 +1,5 @@
-import React from 'react';
-import { useTheme } from '../../context/core/ThemeContext';
+import React from "react";
+import { useTheme } from "../../context/core/ThemeContext";
 
 interface MapEmbedProps {
   lat: number;
@@ -14,11 +14,11 @@ export const MapEmbed: React.FC<MapEmbedProps> = ({ lat, lng, zoom = 15 }) => {
   const mapUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
 
   return (
-    <div 
+    <div
       className="w-full h-64 rounded-[1.875rem] overflow-hidden border shadow-lg mb-6 relative z-10"
-      style={{ 
+      style={{
         borderColor: colors.border,
-        backgroundColor: colors.cardBgGradient.from
+        backgroundColor: colors.cardBgGradient.from,
       }}
     >
       <iframe

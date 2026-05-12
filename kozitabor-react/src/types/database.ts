@@ -24,7 +24,7 @@ export interface Program {
 export interface Media {
   id: number;
   url: string;
-  type: 'IMAGE' | 'FILE';
+  type: "IMAGE" | "FILE";
 }
 
 export interface Info {
@@ -51,34 +51,34 @@ export interface Team {
 }
 
 export interface Bring {
-    id: number;
-    title: string;
+  id: number;
+  title: string;
 }
 
 export interface Activity {
-    id: number;
-    title: string;
+  id: number;
+  title: string;
 }
 
 export interface OrganizerActivity {
-    id: number;
-    title: string;
+  id: number;
+  title: string;
 }
 
 export interface CamperTask {
-    id: number;
-    day: string | Date;
-    timeOffset: number;
-    team: Team;
-    camperActivity: Activity;
+  id: number;
+  day: string | Date;
+  timeOffset: number;
+  team: Team;
+  camperActivity: Activity;
 }
 
 export interface OrganizerTask {
-    id: number;
-    day: string | Date;
-    timeOffset: number;
-    contact: Contact;
-    organizerActivity: OrganizerActivity;
+  id: number;
+  day: string | Date;
+  timeOffset: number;
+  contact: Contact;
+  organizerActivity: OrganizerActivity;
 }
 
 export interface Deadline {

@@ -11,7 +11,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 COPY . .
 
 # A build parancs most már beleégeti a fenti értékeket a JS fájlokba
