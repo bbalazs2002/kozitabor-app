@@ -1,5 +1,19 @@
 {
     "scripts": {
-        "devtool": "node devtool.mjs"
+        "devtool": "node devtool.mjs",
+        "prepare": "husky",
+        "lint-staged": "lint-staged",
+        "lint-check": "biome check --write ./kozitabor-react/src ./kozitabor-api/src",
+        "format": "biome format --write ./kozitabor-react/src ./kozitabor-api/src"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,jsx}": [
+            "biome check --write --no-errors-on-unmatched"
+        ]
+    },
+    "devDependencies": {
+        "@biomejs/biome": "1.8.3",
+        "husky": "9.1.4",
+        "lint-staged": "15.2.7"
     }
 }
