@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { CheckCircle, XCircle, X } from 'lucide-react';
+import { CheckCircle, X, XCircle } from "lucide-react";
+import { useEffect } from "react";
 
-export type ToastType = 'success' | 'error';
+export type ToastType = "success" | "error";
 
 interface ToastProps {
   message: string;
@@ -19,8 +19,8 @@ export const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) =
   }, [onClose, duration]);
 
   const styles = {
-    success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    error: 'bg-rose-50 border-rose-200 text-rose-800',
+    success: "bg-emerald-50 border-emerald-200 text-emerald-800",
+    error: "bg-rose-50 border-rose-200 text-rose-800",
   };
 
   const Icons = {
@@ -29,10 +29,12 @@ export const Toast = ({ message, type, onClose, duration = 3000 }: ToastProps) =
   };
 
   return (
-    <div className={`fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-lg animate-in slide-in-from-right-10 duration-300 ${styles[type]}`}>
+    <div
+      className={`fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-lg animate-in slide-in-from-right-10 duration-300 ${styles[type]}`}
+    >
       {Icons[type]}
       <p className="text-sm font-medium">{message}</p>
-      <button 
+      <button
         onClick={onClose}
         className="ml-2 p-1 hover:bg-black/5 rounded-full transition-colors"
       >

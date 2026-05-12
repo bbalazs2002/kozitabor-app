@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
 
 // 1. Létrehozzuk a natív PG kapcsolatot
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });

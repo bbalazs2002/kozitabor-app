@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
-import { ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/core/ThemeContext';
+import { ChevronRight } from "lucide-react";
+import React, { useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../context/core/ThemeContext";
 
 interface CardItemProps {
   icon?: React.ReactNode;
@@ -17,7 +17,7 @@ export const CardItem: React.FC<CardItemProps> = ({
   to,
   onClick,
   children,
-  className = '',
+  className = "",
   rightSlot,
 }) => {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ export const CardItem: React.FC<CardItemProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (clickable && (e.key === 'Enter' || e.key === ' ')) {
+    if (clickable && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       if (onClick) onClick();
       if (to) navigate(to);
@@ -66,43 +66,33 @@ export const CardItem: React.FC<CardItemProps> = ({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onKeyDown={handleKeyDown}
-      role={clickable ? 'button' : undefined}
+      role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
       className={`
         flex items-center gap-3 py-3 px-1
-        ${clickable ? 'cursor-pointer select-text' : ''}
+        ${clickable ? "cursor-pointer select-text" : ""}
         ${className}
       `}
       style={{
         border: `none`,
         borderBottom: `1px solid ${colors.border}`,
         color: colors.text2,
-        userSelect: 'text',
+        userSelect: "text",
       }}
     >
       {/* ICON */}
-      {icon ?? ''}
+      {icon ?? ""}
 
       {/* CONTENT */}
       <div className="flex-1 flex items-center justify-between gap-4">
-
         <div className="flex items-center gap-3">
           {React.Children.map(children, (child, index) => (
-            <div
-              key={index}
-              className="text-sm"
-              style={{ color: colors.text2 }}
-            >
+            <div key={index} className="text-sm" style={{ color: colors.text2 }}>
               {child}
             </div>
           ))}
 
-          {to && (
-            <ChevronRight
-              size={16}
-              style={{ color: colors.icon }}
-            />
-          )}
+          {to && <ChevronRight size={16} style={{ color: colors.icon }} />}
         </div>
 
         {rightSlot && <div className="shrink-0">{rightSlot}</div>}

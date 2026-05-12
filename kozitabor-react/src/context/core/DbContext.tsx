@@ -1,7 +1,17 @@
-import { createContext, useContext, useState, type ReactNode, useCallback } from 'react';
-import { type Bring, type CamperTask, type Contact, type Deadline, type Info, type LivePrograms, type Program, type Setting, type Team } from '../../types/database';
-import { coreApiRequest } from '../../utils/api';
-import { dayOffsetToUtcTs } from '../../utils/dateHelpers';
+import { type ReactNode, createContext, useCallback, useContext, useState } from "react";
+import {
+  type Bring,
+  type CamperTask,
+  type Contact,
+  type Deadline,
+  type Info,
+  type LivePrograms,
+  type Program,
+  type Setting,
+  type Team,
+} from "../../types/database";
+import { coreApiRequest } from "../../utils/api";
+import { dayOffsetToUtcTs } from "../../utils/dateHelpers";
 
 const CACHE_TIME = 60000; // 1 perc
 
@@ -44,11 +54,11 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
       try {
         const fresh = await coreApiRequest(endpoint);
         setData(fresh || []);
-        setLastFetched(prev => ({ ...prev, [entityKey]: Date.now() }));
+        setLastFetched((prev) => ({ ...prev, [entityKey]: Date.now() }));
         return fresh || [];
       } catch (err) {
         console.error(`[CORE-${entityKey}] Fetch failed:`, err);
-        setLastFetched(prev => ({ ...prev, [entityKey]: Date.now() }));
+        setLastFetched((prev) => ({ ...prev, [entityKey]: Date.now() }));
         return [];
       }
     }, [data, entityKey, endpoint]);
@@ -64,20 +74,20 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // --- ENTITÁSOK DEFINIÁLÁSA ---
-  const infos = useReadCache<Info>('infos', '/info');
-  const contacts = useReadCache<Contact>('contacts', '/contact');
-  const bring = useReadCache<Bring>('bring', '/bring');
-  const teams = useReadCache<Team>('teams', '/team');
-  const programs = useReadCache<Program>('programs', '/program');
-  const camperTasks = useReadCache<CamperTask>('camperTasks', '/task');
-  const settings = useReadCache<Setting>('settings', '/setting');
-  const deadlines = useReadCache<Deadline>('deadlines', '/deadline');
+  const infos = useReadCache<Info>("infos", "/info");
+  const contacts = useReadCache<Contact>("contacts", "/contact");
+  const bring = useReadCache<Bring>("bring", "/bring");
+  const teams = useReadCache<Team>("teams", "/team");
+  const programs = useReadCache<Program>("programs", "/program");
+  const camperTasks = useReadCache<CamperTask>("camperTasks", "/task");
+  const settings = useReadCache<Setting>("settings", "/setting");
+  const deadlines = useReadCache<Deadline>("deadlines", "/deadline");
 
   // --- EGYEDI KLIENS LOGIKÁK ---
 
   const getLivePrograms = async (): Promise<LivePrograms> => {
     try {
-      return await coreApiRequest('/liveProgram');
+      return await coreApiRequest("/liveProgram");
     } catch (err) {
       console.error(err);
       return { current: undefined, next: undefined };
@@ -86,36 +96,48 @@ export const DbProvider = ({ children }: { children: ReactNode }) => {
 
   const getTodayCamperTasks = async (): Promise<CamperTask[]> => {
     const all = await camperTasks.getAll();
-    const todayUTC = new Date().toISOString().split('T')[0];
-    return all.filter(task => new Date(task.day).toISOString().split('T')[0] === todayUTC);
+    const todayUTC = new Date().toISOString().split("T")[0];
+    return all.filter(
+      (task) => new Date(task.day).toISOString().split("T")[0] === todayUTC
+    );
   };
 
   const getUpcomingPrograms = async (count: number = 3): Promise<Program[]> => {
     const allPrograms = await programs.getAll();
     const nowTs = Date.now();
     return allPrograms
-      .filter(p => dayOffsetToUtcTs(p.endDay, p.endTimeOffset) > nowTs)
+      .filter((p) => dayOffsetToUtcTs(p.endDay, p.endTimeOffset) > nowTs)
       .slice(0, count);
   };
 
   return (
-    <DbContext.Provider value={{ 
-      getInfos: infos.getAll, getNInfos: infos.getN, getInfo: infos.getById,
-      getContacts: contacts.getAll, getNContacts: contacts.getN, getContact: contacts.getById,
-      getBring: bring.getAll, getNBring: bring.getN,
-      getTeams: teams.getAll, getTeam: teams.getById,
-      getPrograms: programs.getAll, getNPrograms: programs.getN, getProgram: programs.getById,
-      getLivePrograms,
-      getUpcomingPrograms,
-      getCamperTasks: camperTasks.getAll,
-      getTodayCamperTasks,
-      getSettings: settings.getAll,
-      getSettingByStrId: async (strId: string) => {
-        const all = await settings.getAll();
-        return all.find(s => s.str_id === strId);
-      },
-      getDeadlines: deadlines.getAll,
-    }}>
+    <DbContext.Provider
+      value={{
+        getInfos: infos.getAll,
+        getNInfos: infos.getN,
+        getInfo: infos.getById,
+        getContacts: contacts.getAll,
+        getNContacts: contacts.getN,
+        getContact: contacts.getById,
+        getBring: bring.getAll,
+        getNBring: bring.getN,
+        getTeams: teams.getAll,
+        getTeam: teams.getById,
+        getPrograms: programs.getAll,
+        getNPrograms: programs.getN,
+        getProgram: programs.getById,
+        getLivePrograms,
+        getUpcomingPrograms,
+        getCamperTasks: camperTasks.getAll,
+        getTodayCamperTasks,
+        getSettings: settings.getAll,
+        getSettingByStrId: async (strId: string) => {
+          const all = await settings.getAll();
+          return all.find((s) => s.str_id === strId);
+        },
+        getDeadlines: deadlines.getAll,
+      }}
+    >
       {children}
     </DbContext.Provider>
   );

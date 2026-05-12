@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useDb } from '../context/core/DbContext';
-import type { LivePrograms } from '../types/database';
+import { useEffect, useState } from "react";
+import { useDb } from "../context/core/DbContext";
+import type { LivePrograms } from "../types/database";
 
 export const useLivePrograms = (intervalMs = 60000) => {
   const [data, setData] = useState<LivePrograms>({ current: undefined, next: undefined });

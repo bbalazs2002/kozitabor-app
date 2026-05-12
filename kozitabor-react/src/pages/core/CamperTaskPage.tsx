@@ -1,5 +1,6 @@
-import CamperTaskBlock from '../../features/core/CamperTaskBlock';
+import type { FC } from "react";
+import CamperTaskBlock from "../../features/core/CamperTaskBlock";
 
-const CamperTaskPage: React.FC = () => <CamperTaskBlock />;
+const CamperTaskPage: FC = () => <CamperTaskBlock />;
 
 export default CamperTaskPage;

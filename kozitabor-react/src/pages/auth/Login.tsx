@@ -1,33 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Loader2 } from 'lucide-react';
-import { useAuth } from '../../context/admin/AuthContext';
+import { Loader2, Lock, Mail } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/admin/AuthContext";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const auth = useAuth();
 
   useEffect(() => {
     // Ha a refreshSession lefutott és van user, dobjuk tovább
     if (!auth.loading && auth.user) {
-      navigate('/admin');
+      navigate("/admin");
     }
   }, [auth.user, auth.loading, navigate]);
 
   const handleLogin: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       await auth.login({ email, password });
     } catch (err: any) {
       // 3. Itt kapjuk el a back-endről jövő hibaüzenetet
-      setError(err.message || 'Sikertelen bejelentkezés. Ellenőrizd az adataidat!');
+      setError(err.message || "Sikertelen bejelentkezés. Ellenőrizd az adataidat!");
     } finally {
       // 4. Mindenképpen állítsuk le a töltést
       setLoading(false);
@@ -42,7 +42,9 @@ const LoginPage = () => {
             <Lock size={24} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900">Admin Belépés</h2>
-          <p className="mt-2 text-sm text-gray-500">Kérlek, add meg a hozzáférési adataidat.</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Kérlek, add meg a hozzáférési adataidat.
+          </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -82,7 +84,7 @@ const LoginPage = () => {
             disabled={loading}
             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-70"
           >
-            {loading ? <Loader2 className="animate-spin" /> : 'Bejelentkezés'}
+            {loading ? <Loader2 className="animate-spin" /> : "Bejelentkezés"}
           </button>
         </form>
       </div>

@@ -1,61 +1,109 @@
-import { Router } from 'express';
-import * as coreCtrl from '../controllers/core.controller.js';
-import { idParamMiddleware } from '../middleware/param.middleware.js';
-import { ControllerFactory as CF } from '../utils/controllerFactory.js';
+import { Router } from "express";
+import * as coreCtrl from "../controllers/core.controller.js";
+import { idParamMiddleware } from "../middleware/param.middleware.js";
 import {
-  infoService, contactService, teamService,
-  bringService, camperTaskService, programService, settingService, deadlineService
-} from '../services/core/index.js';
+  bringService,
+  camperTaskService,
+  contactService,
+  deadlineService,
+  infoService,
+  programService,
+  settingService,
+  teamService,
+} from "../services/core/index.js";
+import { ControllerFactory as CF } from "../utils/controllerFactory.js";
 
 const router = Router();
-const catchAsync = (fn: any) => (req: any, res: any, next: any) => Promise.resolve(fn(req, res, next)).catch(next);
+const catchAsync = (fn: any) => (req: any, res: any, next: any) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
 // Globális ID validálás
-router.param('id', idParamMiddleware);
+router.param("id", idParamMiddleware);
 
 // --- INFO & MAP ---
-router.get('/info',     catchAsync(CF.getAll(infoService, { select: { id: true, title: true, icon: true }, orderBy: { id: 'desc' } })));
-router.get('/info/:id', catchAsync(CF.getOne(infoService, { map: true, media: true })));
+router.get(
+  "/info",
+  catchAsync(
+    CF.getAll(infoService, {
+      select: { id: true, title: true, icon: true },
+      orderBy: { id: "desc" },
+    })
+  )
+);
+router.get("/info/:id", catchAsync(CF.getOne(infoService, { map: true, media: true })));
 
 // --- CONTACTS ---
-router.get('/contact',  catchAsync(CF.getAll(contactService, { orderBy: { ordering: 'asc' }, include: { role: true } })));
+router.get(
+  "/contact",
+  catchAsync(
+    CF.getAll(contactService, { orderBy: { ordering: "asc" }, include: { role: true } })
+  )
+);
 
 // --- BRING ---
-router.get('/bring',    catchAsync(CF.getAll(bringService, { orderBy: { title: 'asc' } })));
+router.get("/bring", catchAsync(CF.getAll(bringService, { orderBy: { title: "asc" } })));
 
 // --- TEAMS ---
-router.get('/team',     catchAsync(CF.getAll(teamService, {
-  orderBy: { name: 'asc' },
-  include: {
-    leaders: {
-      orderBy: { contact: { name: 'asc' } },
-      include: { contact: true }
-    }
-  }
-})));
-router.get('/team/:id', catchAsync(CF.getOne(teamService, {
-  leaders: {
-    orderBy: { contact: { name: 'asc' } },
-    include: { contact: true }
-  }
-})));
+router.get(
+  "/team",
+  catchAsync(
+    CF.getAll(teamService, {
+      orderBy: { name: "asc" },
+      include: {
+        leaders: {
+          orderBy: { contact: { name: "asc" } },
+          include: { contact: true },
+        },
+      },
+    })
+  )
+);
+router.get(
+  "/team/:id",
+  catchAsync(
+    CF.getOne(teamService, {
+      leaders: {
+        orderBy: { contact: { name: "asc" } },
+        include: { contact: true },
+      },
+    })
+  )
+);
 
 // --- BEOSZTÁS (TASKS) ---
-router.get('/task',     catchAsync(CF.getAll(camperTaskService, {
-  include: { team: true, camperActivity: true },
-  orderBy: [{ day: 'asc' }, { timeOffset: 'asc' }]
-})));
+router.get(
+  "/task",
+  catchAsync(
+    CF.getAll(camperTaskService, {
+      include: { team: true, camperActivity: true },
+      orderBy: [{ day: "asc" }, { timeOffset: "asc" }],
+    })
+  )
+);
 
 // --- SETTINGS (publikus) ---
-router.get('/setting',      catchAsync(CF.getAll(settingService, { orderBy: { label: 'asc' } })));
-router.get('/setting/:id',  catchAsync(CF.getOne(settingService)));
+router.get(
+  "/setting",
+  catchAsync(CF.getAll(settingService, { orderBy: { label: "asc" } }))
+);
+router.get("/setting/:id", catchAsync(CF.getOne(settingService)));
 
 // --- DEADLINES ---
-router.get('/deadline', catchAsync(CF.getAll(deadlineService, { orderBy: { date: 'asc' } })));
+router.get(
+  "/deadline",
+  catchAsync(CF.getAll(deadlineService, { orderBy: { date: "asc" } }))
+);
 
 // --- PROGRAMOK ---
-router.get('/program',      catchAsync(CF.getAll(programService, { orderBy: [{ startDay: 'asc' }, { startTimeOffset: 'asc' }] })));
-router.get('/liveProgram', catchAsync(coreCtrl.getLivePrograms)); // Egyedi metódus a kontrollerből
-router.get('/program/:id',  catchAsync(CF.getOne(programService)));
+router.get(
+  "/program",
+  catchAsync(
+    CF.getAll(programService, {
+      orderBy: [{ startDay: "asc" }, { startTimeOffset: "asc" }],
+    })
+  )
+);
+router.get("/liveProgram", catchAsync(coreCtrl.getLivePrograms)); // Egyedi metódus a kontrollerből
+router.get("/program/:id", catchAsync(CF.getOne(programService)));
 
 export default router;

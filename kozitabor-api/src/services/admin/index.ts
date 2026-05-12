@@ -1,5 +1,5 @@
-import { prisma } from '../../lib/prisma.js';
-import { createBaseService } from '../../services/base.service.js';
+import { prisma } from "../../lib/prisma.js";
+import { createBaseService } from "../../services/base.service.js";
 
 export const contactService = createBaseService(prisma.contact);
 export const roleService = createBaseService(prisma.role);

@@ -6,7 +6,7 @@ const AdminProviders = () => {
   return (
     <DbProvider>
       <ToastProvider>
-        <Outlet /> 
+        <Outlet />
       </ToastProvider>
     </DbProvider>
   );

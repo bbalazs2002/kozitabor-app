@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useDb } from '../../context/admin/DbContext';
-import ListCard from '../../components/admin/ListCard';
-import { adminApiRequest } from '../../utils/api';
-import { formatOffsetToTime, getDayDate } from '../../utils/dateHelpers';
-import { MenuSquare, Plus } from 'lucide-react';
-import AdminButton from '../../components/admin/AdminButton';
-import { useToast } from '../../context/admin/ToastContext';
+import { MenuSquare, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import AdminButton from "../../components/admin/AdminButton";
+import ListCard from "../../components/admin/ListCard";
+import { useDb } from "../../context/admin/DbContext";
+import { useToast } from "../../context/admin/ToastContext";
+import { adminApiRequest } from "../../utils/api";
+import { formatOffsetToTime, getDayDate } from "../../utils/dateHelpers";
 
 const TaskListPage: React.FC = () => {
-
-  const {showToast} = useToast();
+  const { showToast } = useToast();
 
   const context = useDb();
   const [data, setData] = useState<any[]>([]);
@@ -36,10 +35,10 @@ const TaskListPage: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await adminApiRequest(`/camper-task/${id}`, { method: 'DELETE' });
+      await adminApiRequest(`/camper-task/${id}`, { method: "DELETE" });
       context.removeTaskFromCache(id);
       showToast("Sikeresen törölve.");
-    } catch (err) {
+    } catch {
       showToast("Hiba a törlés során.", "error");
     }
   };
@@ -51,12 +50,16 @@ const TaskListPage: React.FC = () => {
       {/* Header Szekció */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Feladatok</h1>
-          <p className="text-gray-500 mt-1">Szerkeszd az alkalmazásban megjelenő feladatokat.</p>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Feladatok
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Szerkeszd az alkalmazásban megjelenő feladatokat.
+          </p>
         </div>
-        <AdminButton 
-          to="/admin/task/new" 
-          icon={<Plus size={20} />} 
+        <AdminButton
+          to="/admin/task/new"
+          icon={<Plus size={20} />}
           className="w-full md:w-auto px-6 py-3 shadow-indigo-200 shadow-lg"
         >
           Új feladat létrehozása
@@ -64,7 +67,9 @@ const TaskListPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-gray-400 animate-pulse">Adatok betöltése...</div>
+        <div className="py-20 text-center text-gray-400 animate-pulse">
+          Adatok betöltése...
+        </div>
       ) : Object.keys(data).length === 0 ? (
         <div className="bg-white p-12 rounded-2xl border-2 border-dashed border-gray-200 text-center">
           <p className="text-gray-500">Még nincsenek létrehozott feladatok.</p>
@@ -90,7 +95,6 @@ const TaskListPage: React.FC = () => {
           </div>
         ))
       )}
-
     </div>
   );
 };

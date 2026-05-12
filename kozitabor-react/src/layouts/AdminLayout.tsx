@@ -1,11 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Calendar, Users, Contact, ClipboardList, Info, Home, List, CheckCheck, LogOut, Tag, Settings, Clock } from 'lucide-react';
-import AdminButton from '../components/admin/AdminButton';
-import { useAuth } from '../context/admin/AuthContext';
+import {
+  Calendar,
+  CheckCheck,
+  ClipboardList,
+  Clock,
+  Contact,
+  Home,
+  Info,
+  List,
+  LogOut,
+  Menu,
+  Settings,
+  Tag,
+  Users,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import AdminButton from "../components/admin/AdminButton";
+import { useAuth } from "../context/admin/AuthContext";
 
 const AdminLayout = () => {
-
   const [user, setUser] = useState(null);
   const auth = useAuth();
   useEffect(() => {
@@ -17,21 +31,39 @@ const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const menuItems = user ? [
-    { name: 'Vezérlőpult', icon: <Home size={20} />, path: '/admin' },
-    { name: 'Programok', icon: <Calendar size={20} />, path: '/admin/programs' },
-    { name: 'Csapatok', icon: <Users size={20} />, path: '/admin/teams' },
-    { name: 'Kontaktok', icon: <Contact size={20} />, path: '/admin/contacts' },
-    { name: 'Szerepkörök', icon: <Tag size={20} />, path: '/admin/roles' },
-    { name: 'Fontos infók', icon: <Info size={20} />, path: '/admin/infos' },
-    { name: 'Mit hozz?', icon: <CheckCheck size={20} />, path: '/admin/brings' },
-    { name: 'Tábori tevékenységek', icon: <List size={20} />, path: '/admin/activities' },
-    { name: 'Tábori feladatok', icon: <ClipboardList size={20} />, path: '/admin/tasks' },
-    { name: 'Szervezői tevékenységek', icon: <List size={20} />, path: '/admin/organizer-activities' },
-    { name: 'Szervezői feladatok', icon: <ClipboardList size={20} />, path: '/admin/organizer-tasks' },
-    { name: 'Határidők', icon: <Clock size={20} />, path: '/admin/deadlines' },
-    { name: 'Beállítások', icon: <Settings size={20} />, path: '/admin/settings' },
-  ] : [];
+  const menuItems = user
+    ? [
+        { name: "Vezérlőpult", icon: <Home size={20} />, path: "/admin" },
+        { name: "Programok", icon: <Calendar size={20} />, path: "/admin/programs" },
+        { name: "Csapatok", icon: <Users size={20} />, path: "/admin/teams" },
+        { name: "Kontaktok", icon: <Contact size={20} />, path: "/admin/contacts" },
+        { name: "Szerepkörök", icon: <Tag size={20} />, path: "/admin/roles" },
+        { name: "Fontos infók", icon: <Info size={20} />, path: "/admin/infos" },
+        { name: "Mit hozz?", icon: <CheckCheck size={20} />, path: "/admin/brings" },
+        {
+          name: "Tábori tevékenységek",
+          icon: <List size={20} />,
+          path: "/admin/activities",
+        },
+        {
+          name: "Tábori feladatok",
+          icon: <ClipboardList size={20} />,
+          path: "/admin/tasks",
+        },
+        {
+          name: "Szervezői tevékenységek",
+          icon: <List size={20} />,
+          path: "/admin/organizer-activities",
+        },
+        {
+          name: "Szervezői feladatok",
+          icon: <ClipboardList size={20} />,
+          path: "/admin/organizer-tasks",
+        },
+        { name: "Határidők", icon: <Clock size={20} />, path: "/admin/deadlines" },
+        { name: "Beállítások", icon: <Settings size={20} />, path: "/admin/settings" },
+      ]
+    : [];
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -39,18 +71,20 @@ const AdminLayout = () => {
     <div className="flex h-screen bg-gray-100">
       {/* Mobil Overlay - csak akkor látszik, ha nyitva a menü mobilon */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden" 
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside
+        className={`
         fixed inset-y-0 left-0 z-30 w-64 bg-indigo-900 text-white transform transition-transform duration-300 ease-in-out flex flex-col
         lg:relative lg:translate-x-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+      >
         <div className="flex items-center justify-between p-6 border-b border-indigo-800">
           <span className="text-xl font-bold tracking-wider">KoziAdmin</span>
           <button className="lg:hidden" onClick={toggleSidebar}>
@@ -68,7 +102,7 @@ const AdminLayout = () => {
                 onClick={() => setIsSidebarOpen(false)} // Mobilon bezáródik kattintás után
                 className={`
                   flex items-center gap-4 px-4 py-3 rounded-lg transition-colors
-                  ${isActive ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}
+                  ${isActive ? "bg-indigo-700 text-white" : "text-indigo-200 hover:bg-indigo-800 hover:text-white"}
                 `}
               >
                 {item.icon}
@@ -83,20 +117,20 @@ const AdminLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 lg:px-8">
-          <button 
-            onClick={toggleSidebar} 
+          <button
+            onClick={toggleSidebar}
             className="p-2 rounded-md hover:bg-gray-100 lg:hidden"
           >
             <Menu size={24} />
           </button>
-          
+
           <div className="flex-1 flex justify-end items-center gap-4">
-            {user && <AdminButton
-              onClick={auth.logout}
-            >
-              Kijelentkezés
-              <LogOut />
-            </AdminButton>}
+            {user && (
+              <AdminButton onClick={auth.logout}>
+                Kijelentkezés
+                <LogOut />
+              </AdminButton>
+            )}
           </div>
         </header>
 
