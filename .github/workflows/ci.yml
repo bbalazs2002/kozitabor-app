@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+
+concurrency:
+  group: ci-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            kozitabor-react/node_modules
+            kozitabor-api/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Lint and format check
+        run: npx biome check ./kozitabor-react/src ./kozitabor-api/src
+
+      - name: Build React app
+        run: npm run build --prefix kozitabor-react
+
+      - name: Build API
+        run: npm run build --prefix kozitabor-api
